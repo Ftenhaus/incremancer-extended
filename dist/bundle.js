@@ -1,6 +1,21 @@
 const EXTENDED_BALANCE = Object.freeze({ prestige: Object.freeze({ costGrowth: 1.225, resourceEffect: 0.2, bonusStart: 60, bonusGrowth: 0.05 }), ascension: Object.freeze({ priceFactor: 0.5, speedFactor: 2 }), skeleton: Object.freeze({ xpBase: 800, xpExponent: 1.9 }), enemy: Object.freeze({ growth85: 1.015, growth499: 1.03, growth999: 1.021, growth1499: 1.025, growth2300: 1.025 }) });
 const EXTENDED_STORAGE = Object.freeze({ game: "incremancer-extended:game", skeleton: "incremancer-extended:skeleton", talents: "incremancer-extended:talents" });
-const FORK_VERSION = "v0.1.0";
+// Limit each bulk action to avoid unbounded synchronous loops (including free ranks).
+const EXTENDED_BULK_LIMIT = 1000;
+function extendedRankPrice(base, growth, rank, ascension) {
+  return Math.round(base * Math.pow(growth, rank) * Math.pow(EXTENDED_BALANCE.ascension.priceFactor, ascension || 0));
+}
+function extendedBulkQuote(base, growth, rank, ascension, budget, limit) {
+  let count = 0, total = 0;
+  while (count < Math.min(EXTENDED_BULK_LIMIT, Math.max(0, limit))) {
+    const price = extendedRankPrice(base, growth, rank + count, ascension);
+    if (!Number.isFinite(price) || price < 0 || price > budget - total) break;
+    total += price;
+    count++;
+  }
+  return {count, total};
+}
+const FORK_VERSION = "v0.2.0-dev";
 const FORK_VERSION_DATE = "2026-11-26";
 console.log("[Incremancer Extended] " + FORK_VERSION + " (" + FORK_VERSION_DATE + ")");
 var Incremancer;
@@ -887,15 +902,15 @@ var Incremancer;
       let s = 0;
       switch (e.costType) {
         case this.costs.blood:
-          s = h(e.basePrice, e.multi, t, this.gameModel.persistentData.blood);
+          s = extendedBulkQuote(e.basePrice, e.multi, t, this.gameModel.persistentData.ascensionLevel, this.gameModel.persistentData.blood, EXTENDED_BULK_LIMIT).count;
           break;
         case this.costs.parts:
-          s = h(e.basePrice, e.multi, t, this.gameModel.persistentData.parts)
+          s = extendedBulkQuote(e.basePrice, e.multi, t, this.gameModel.persistentData.ascensionLevel, this.gameModel.persistentData.parts, EXTENDED_BULK_LIMIT).count
       }
-      return 0 != e.cap ? Math.min(s, e.cap - t) : s
+      return 0 != e.cap ? Math.max(0, Math.min(s, e.cap - t)) : s
     }
     upgradeMaxPrice(e, t) {
-      return l(e.basePrice, e.multi, this.currentRank(e), t)
+      return extendedBulkQuote(e.basePrice, e.multi, this.currentRank(e), this.gameModel.persistentData.ascensionLevel, Infinity, t).total
     }
     canAffordGenerator(e) {
       switch (e.costType) {
@@ -2338,7 +2353,7 @@ var Incremancer;
         case this.types.bloodStoragePC:
           return void(this.gameModel.bloodStorePCMod *= e.costType == this.costs.prestigePoints ? this.calculateWithPrestigeRankBonus(e, t) : Math.pow(1 + e.effect, t));
         case this.types.brainsGainPC:
-          return void(this.gameModel.brainsPCMod *= t > e.costType == this.costs.prestigePoints ? this.calculateWithPrestigeRankBonus(e, t) : Math.pow(1 + e.effect, t));
+          return void(this.gameModel.brainsPCMod *= e.costType == this.costs.prestigePoints ? this.calculateWithPrestigeRankBonus(e, t) : Math.pow(1 + e.effect, t));
         case this.types.brainsStoragePC:
           return void(this.gameModel.brainsStorePCMod *= e.costType == this.costs.prestigePoints ? this.calculateWithPrestigeRankBonus(e, t) : Math.pow(1 + e.effect, t));
         case this.types.zombieDmgPC:
@@ -2695,24 +2710,24 @@ var Incremancer;
       let s = 0;
       switch (e.costType) {
         case this.costs.blood:
-          s = h(e.basePrice, e.multiplier, t, this.gameModel.persistentData.blood);
+          s = extendedBulkQuote(e.basePrice, e.multiplier, t, this.gameModel.persistentData.ascensionLevel, this.gameModel.persistentData.blood, EXTENDED_BULK_LIMIT).count;
           break;
         case this.costs.brains:
-          s = h(e.basePrice, e.multiplier, t, this.gameModel.persistentData.brains);
+          s = extendedBulkQuote(e.basePrice, e.multiplier, t, this.gameModel.persistentData.ascensionLevel, this.gameModel.persistentData.brains, EXTENDED_BULK_LIMIT).count;
           break;
         case this.costs.bones:
-          s = h(e.basePrice, e.multiplier, t, this.gameModel.persistentData.bones);
+          s = extendedBulkQuote(e.basePrice, e.multiplier, t, this.gameModel.persistentData.ascensionLevel, this.gameModel.persistentData.bones, EXTENDED_BULK_LIMIT).count;
           break;
         case this.costs.parts:
-          s = h(e.basePrice, e.multiplier, t, this.gameModel.persistentData.parts);
+          s = extendedBulkQuote(e.basePrice, e.multiplier, t, this.gameModel.persistentData.ascensionLevel, this.gameModel.persistentData.parts, EXTENDED_BULK_LIMIT).count;
           break;
         case this.costs.prestigePoints:
-          s = h(e.basePrice, e.multiplier, t, this.gameModel.persistentData.prestigePointsToSpend)
+          s = extendedBulkQuote(e.basePrice, e.multiplier, t, this.gameModel.persistentData.ascensionLevel, this.gameModel.persistentData.prestigePointsToSpend, EXTENDED_BULK_LIMIT).count
       }
-      return 0 != e.cap ? Math.min(s, this.getEffectiveCap(e) - t) : s
+      return 0 != e.cap ? Math.max(0, Math.min(s, this.getEffectiveCap(e) - t)) : s
     }
     upgradeMaxPrice(e, t) {
-      return l(e.basePrice, e.multiplier, this.currentRank(e), t)
+      return extendedBulkQuote(e.basePrice, e.multiplier, this.currentRank(e), this.gameModel.persistentData.ascensionLevel, Infinity, t).total
     }
     canAffordUpgrade(e) {
       if (e.type == this.types.golemTalents) {
@@ -3154,9 +3169,9 @@ var Incremancer;
         e < 85 ? 500 * (e - 49) :
         e < 499 ? 17800 * Math.pow(EXTENDED_BALANCE.enemy.growth85, e - 84) :
         e < 999 ? 85e5 * Math.pow(EXTENDED_BALANCE.enemy.growth499, e - 499) :
-        e < 1499 ? 498e16 * Math.pow(EXTENDED_BALANCE.enemy.growth999, e - 1499) :
-        e > 2299 ? 845e23 * Math.pow(EXTENDED_BALANCE.enemy.growth2300, e - 2299) :
-        22e12 * Math.pow(EXTENDED_BALANCE.enemy.growth1499, e - 999)
+        e < 1499 ? 85e5 * Math.pow(EXTENDED_BALANCE.enemy.growth499, 499) * Math.pow(EXTENDED_BALANCE.enemy.growth999, e - 998) :
+        e > 2299 ? 85e5 * Math.pow(EXTENDED_BALANCE.enemy.growth499, 499) * Math.pow(EXTENDED_BALANCE.enemy.growth999, 500) * Math.pow(EXTENDED_BALANCE.enemy.growth1499, 801) * Math.pow(EXTENDED_BALANCE.enemy.growth2300, e - 2299) :
+        85e5 * Math.pow(EXTENDED_BALANCE.enemy.growth499, 499) * Math.pow(EXTENDED_BALANCE.enemy.growth999, 500) * Math.pow(EXTENDED_BALANCE.enemy.growth1499, e - 1498)
     }
     getAttackDamage() {
       1 != this.gameModel.level ? 2 != this.gameModel.level ? 3 != this.gameModel.level ? this.attackDamage = Math.round(this.getMaxHealth(this.gameModel.level) / 10) : this.attackDamage = 5 : this.attackDamage = 4 : this.attackDamage = 2

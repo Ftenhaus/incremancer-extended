@@ -24,10 +24,13 @@ test('prestige baseline ranks 0 and 60',()=>{assert.equal(prestige({effect:.2},0
 test('bulk geometric cost matches unrounded sum',()=>{for(const m of [1,1.1,1.225,2]){const expected=Array.from({length:10},(_,i)=>10*m**(5+i)).reduce((a,b)=>a+b,0);assert.ok(Math.abs(bulk(10,m,5,10)/expected-1)<1e-10);}});
 test('bulk affordability away from rounding boundaries',()=>{assert.equal(affordable(10,1.225,5,bulk(10,1.225,5,10)*1.001),10);});
 test('skeleton XP baseline',()=>{assert.equal(xp.call({persistent:{level:1}}),800);assert.ok(xp.call({persistent:{level:100}})>xp.call({persistent:{level:99}}));});
-test('enemy health must not decrease at level 2300',{todo:'Known upstream defect'},()=>assert.ok(hp(2300)>=hp(2299)));
+test('enemy health must not decrease at level 2300',()=>assert.ok(hp(2300)>=hp(2299)));
 test('prestige must remain finite at rank 300',{todo:'Numeric architecture required'},()=>assert.ok(Number.isFinite(prestige({effect:.2},300))));
-test('bulk cost must honor ascension',{todo:'Known mismatch; unrounded bulk pricing also needs review'},()=>{const ctx={currentRank:()=>0,gameModel:{persistentData:{ascensionLevel:1}}};assert.equal(bulk(10,1.225,0,1),price.call(ctx,{basePrice:10,multi:1.225}));});
-test('brain prestige condition must match other resources',{todo:'Review actual upgrade application before fixing'},()=>assert.ok(!source.includes('brainsPCMod *= t > e.costType == this.costs.prestigePoints')));
+test('bulk cost must honor ascension',()=>{const ctx={currentRank:()=>0,gameModel:{persistentData:{ascensionLevel:1}}};assert.equal(extract('upgradeMaxPrice(e, t) {','e,t').call(ctx,{basePrice:10,multi:1.225},1),price.call(ctx,{basePrice:10,multi:1.225}));});
+test('brain prestige condition must match other resources',()=>assert.ok(!source.includes('brainsPCMod *= t > e.costType == this.costs.prestigePoints')));
 
 test('Extended storage names are unique and legacy keys are not assigned',()=>{const keys=vm.runInNewContext(source.slice(0,source.indexOf('const FORK_VERSION'))+'\nObject.values(EXTENDED_STORAGE)');assert.equal(new Set(keys).size,3);for(const key of keys)assert.ok(key.startsWith('incremancer-extended:'));for(const key of ['ZombieData','incremancerskele','incremancertalents'])assert.ok(!source.includes('StorageName = "'+key+'"')&&!source.includes('storageName = "'+key+'"'));});
 test('upstream cloud login disabled',()=>assert.ok(source.includes('if (false && window.kongregate) try {')));
+
+test('enemy late curve monotonic',()=>{for(let n=85;n<=10000;n++)assert.ok(hp(n)>=hp(n-1),'level '+n);});
+test('rounded bulk quote matches individual prices and budget',()=>{const q=extract('function extendedBulkQuote(base, growth, rank, ascension, budget, limit) {','base,growth,rank,ascension,budget,limit');for(const a of [0,1,5,20]){const total=Array.from({length:10},(_,i)=>Math.round(10*1.225**(5+i)*.5**a)).reduce((x,y)=>x+y,0);assert.equal(q(10,1.225,5,a,total,10).total,total);assert.equal(q(10,1.225,5,a,total,10).count,10);}assert.equal(q(10,1,0,100,0,Infinity).count,1000);});
