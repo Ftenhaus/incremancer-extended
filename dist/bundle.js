@@ -24,7 +24,7 @@ function extendedBulkQuote(base, growth, rank, ascension, budget, limit) {
   }
   return {count, total};
 }
-const FORK_VERSION = "v0.4.0-dev";
+const FORK_VERSION = "v0.5.0-dev";
 const FORK_VERSION_DATE = "2026-11-26";
 console.log("[Incremancer Extended] " + FORK_VERSION + " (" + FORK_VERSION_DATE + ")");
 var Incremancer;
@@ -4169,13 +4169,24 @@ var Incremancer;
     xpForNextLevel() {
       return EXTENDED_BALANCE.skeleton.xpBase * Math.pow(this.persistent.level, EXTENDED_BALANCE.skeleton.xpExponent)
     }
-    addXp(e) {
-      if (this.isAlive() && (this.persistent.xp += e * this.persistent.xpRate, this.persistent.xp > this.xpForNextLevel())) {
-        this.persistent.xp -= this.xpForNextLevel(), this.persistent.level++, this.upgrades.applyUpgrades(), this.model.sendMessage("Skeleton Champion reached level " + this.persistent.level + "!", "chat-levelup");
-        const e = document.getElementById("skeleton");
-        e && (e.classList.toggle("levelup"), setTimeout((function() {
-          e.classList.toggle("levelup")
-        }), 3e3))
+    addXp(amount, fromEquipment = false) {
+      if (!fromEquipment && !this.isAlive()) return;
+      const total = this.persistent.xp + amount * this.persistent.xpRate;
+      if (!Number.isFinite(total) || amount < 0) return;
+      this.persistent.xp = total;
+      const startingLevel = this.persistent.level;
+      // Keep a very large imported XP balance responsive. Excess XP carries forward.
+      while (this.persistent.level - startingLevel < 100 && this.persistent.xp >= this.xpForNextLevel()) {
+        this.persistent.xp -= this.xpForNextLevel();
+        this.persistent.level++;
+      }
+      if (this.persistent.level === startingLevel) return;
+      this.upgrades.applyUpgrades();
+      this.model.sendMessage("Skeleton Champion reached level " + this.persistent.level + "!", "chat-levelup");
+      const icon = document.getElementById("skeleton");
+      if (icon) {
+        icon.classList.add("levelup");
+        setTimeout(() => icon.classList.remove("levelup"), 3000);
       }
     }
     isAlive() {
@@ -4545,50 +4556,30 @@ var Incremancer;
         q: !1
       }
     }
-    destroyItem(e) {
-      this.addXp(e.l * (1 + e.r * 2) * 20);
-      for (let t = 0; t < this.persistent.items.length; t++) this.persistent.items[t].id === e.id && this.persistent.items.splice(t, 1)
+    salvageXp(item) {
+      return item.l * (1 + item.r * 2) * 20;
+    }
+    canBulkSalvage(item) {
+      return !item.q && [this.rarity.common, this.rarity.rare, this.rarity.epic].includes(item.r);
+    }
+    destroyItem(item) {
+      const index = this.persistent.items.indexOf(item);
+      if (index < 0 || item.q) return;
+      this.persistent.items.splice(index, 1);
+      this.addXp(this.salvageXp(item), true);
     }
     destroyAllItems() {
-      this.addXp(this.xpForItems() - this.xpForAncient() - this.xpForDivine() - this.xpForChaos()), this.persistent.items = this.persistent.items.filter((e => e.q || (e.r == this.rarity.legendary || e.r == this.rarity.ancient || e.r == this.rarity.divine || e.r == this.rarity.chaos)))
+      const amount = this.xpTotal();
+      this.persistent.items = this.persistent.items.filter(item => !this.canBulkSalvage(item));
+      this.addXp(amount, true);
     }
     destroyAllItemsLegendary() {
-      this.addXp(this.xpForLegendary()), this.persistent.items = this.persistent.items.filter((e => e.q || (e.r == this.rarity.common || e.r == this.rarity.rare || e.r == this.rarity.epic || e.r == this.rarity.ancient || e.r == this.rarity.divine || e.r == this.rarity.chaos)))
-    }
-    xpForItems() {
-      let e = 0;
-      return this.persistent.items.filter(e => !e.q && e.r != this.rarity.legendary).forEach((function(t) {
-        e += t.l * (1 + t.r * 2) * 20
-      })), e
-    }
-
-    xpForLegendary() {
-      let e = 0;
-      return this.persistent.items.filter(e => !e.q && e.r == this.rarity.legendary).forEach((function(t) {
-        e += t.l * (1 + t.r * 2) * 20
-      })), e
-    }
-
-    xpForAncient() {
-      let e = 0;
-      return this.persistent.items.filter(e => !e.q && e.r == this.rarity.ancient).forEach((function(t) {
-        e += t.l * (1 + t.r * 2) * 20
-      })), e
-    }
-    xpForDivine() {
-      let e = 0;
-      return this.persistent.items.filter(e => !e.q && e.r == this.rarity.divine).forEach((function(t) {
-        e += t.l * (1 + t.r * 2) * 20
-      })), e
-    }
-    xpForChaos() {
-      let e = 0;
-      return this.persistent.items.filter(e => !e.q && e.r == this.rarity.chaos).forEach((function(t) {
-        e += t.l * (1 + t.r * 2) * 20
-      })), e
+      const items = this.persistent.items.filter(item => !item.q && item.r === this.rarity.legendary);
+      for (const item of items) this.destroyItem(item);
     }
     xpTotal() {
-      return (this.xpForItems() - this.xpForAncient - this.xpForDivine - this.xpForChaos)
+      return this.persistent.items.reduce((sum, item) =>
+        sum + (this.canBulkSalvage(item) ? this.salvageXp(item) : 0), 0);
     }
   }
 
@@ -7282,6 +7273,8 @@ var Incremancer;
         e.max(), kt()
       },
       xpPercent: () => Math.round(100 * Math.min(1, c.skeleton().xp / i.xpForNextLevel())),
+      salvageXp: item => i.salvageXp(item) * i.persistent.xpRate,
+      equippedItem: item => i.persistent.items.find(other => other.s === item.s && other.q),
       xpForNextLevel: () => i.xpForNextLevel(),
       xpRate: () => 100 * i.persistent.xpRate,
       prestigePointsPerKill: () => (1.00025 ** c.skeleton().level) * c.skeleton().level,
@@ -7455,7 +7448,7 @@ var Incremancer;
         }));
       },
       trashAll() {
-        c.confirmMessage = "Are you sure you want to destroy all non-equipped items? You will earn " + n(i.xpTotal()) + " xp", c.confirmCallback = function() {
+        c.confirmMessage = "Are you sure you want to destroy unequipped common, rare and epic items? You will earn " + n(i.xpTotal() * i.persistent.xpRate) + " xp", c.confirmCallback = function() {
           c.confirmCallback = !1, i.destroyAllItems()
         }
       },

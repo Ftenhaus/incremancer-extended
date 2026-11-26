@@ -1,4 +1,7 @@
 # Changelog
+## 0.5.0 — Skeleton Champion progression and equipment
+- Equipment tooltips show equipped slot comparisons and salvage XP including the champion XP rate. Bulk salvage protects equipped and high-rarity gear. Equipment grants XP while the champion is down.
+- Exact XP thresholds grant levels. Large awards can grant up to 100 levels per update, with remaining XP carried forward.
 ## 0.4.0 — shop automation and progression statistics
 - Pause and resume automatic shop and prestige purchases from Options after unlocking automation. Stats shows the highest cleared level and counts automatic ranks purchased since this update.
 

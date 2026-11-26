@@ -70,3 +70,32 @@ test('shop automation preserves selections on pause and counts only successful p
   assert.deepEqual(attempts, [2, 3, 2, 3]);
   assert.equal(data.automaticUpgradeRanks, 2);
 });
+
+test('equipment salvage quotes match XP awards and protect equipped and legendary items', () => {
+  const items = [{r: 1, l: 2}, {r: 2, l: 3, q: true}, {r: 4, l: 5}];
+  const champion = {
+    persistent: {items}, rarity: {common: 1, rare: 2, epic: 3, legendary: 4},
+    salvageXp: extract('salvageXp(item) {', 'item'),
+    canBulkSalvage: extract('canBulkSalvage(item) {', 'item'),
+    xpTotal: extract('xpTotal() {', ''),
+    addXp(amount, equipment) { assert.equal(amount, 120); assert.equal(equipment, true); }
+  };
+  assert.equal(champion.xpTotal(), 120);
+  extract('destroyAllItems() {', '').call(champion);
+  assert.deepEqual(champion.persistent.items, items.slice(1));
+});
+
+test('equipment XP grants multiple exact-threshold levels while the champion is down', () => {
+  const gain = extract('addXp(amount, fromEquipment = false) {', 'amount,fromEquipment,document');
+  const champion = {
+    persistent: {level: 1, xp: 0, xpRate: 2},
+    xpForNextLevel() { return this.persistent.level * 100; },
+    isAlive: () => false, upgrades: {applyUpgrades() {}}, model: {sendMessage() {}}
+  };
+  const document = {getElementById: () => null};
+  gain.call(champion, 150, false, document);
+  assert.equal(champion.persistent.xp, 0);
+  gain.call(champion, 150, true, document);
+  assert.equal(champion.persistent.level, 3);
+  assert.equal(champion.persistent.xp, 0);
+});
