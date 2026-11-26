@@ -46,10 +46,11 @@
       </div>
     </div>
   </div>
-  <p ng-if="zm.factoryTab == 'level'">Each time you level up a creature its health and damage will increase by 75%, but the cost will increase by 100%. Make sure you can afford it because there's no going back.</p>
+  <p ng-if="zm.factoryTab == 'level'">Each time you level up a creature its health and damage will increase by 75%, but the base cost will increase by 90%. Make sure you can afford it because there's no going back.</p>
   <div class="upgrades" ng-if="zm.factoryTab == 'level'">
     <div ng-repeat="creature in zm.upgrades" class="upgrade parts">
       <h4>{{creature.name}} Level:{{creature.level}}</h4>
+      <p>{{creature.level >= 10 ? 'Evolved' : 'Evolves at level 10'}} · {{zm.factory.evolution(creature)}} ({{zm.factory.evolution(creature) == 'Guardian' ? '+50% health' : '+50% damage'}} on spawn)</p>
       <h4 class="cost">{{zm.factory.creatureLevelPrice(creature)|whole}} parts</h4>
       <div class="clear"></div>
       <button ng-click="zm.factory.levelCreature(creature);" ng-disabled="!zm.factory.canLevelCreature(creature)">{{zm.factory.creatureLevelButtonText(creature)}}

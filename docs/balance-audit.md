@@ -37,3 +37,7 @@ Prior to this adjustment, rounding discounted prices allowed a zero-point budget
 ## Necropolis foundations
 
 The Ossuary costs 50 unspent prestige points and adds 2 base zombie health. The Spirit Well costs 100 and adds 1 base energy per second. Each building can be bought once. Flat bonuses are applied before ordinary upgrades, including after prestige and ascension. Both bonuses default to zero in older saves.
+
+## Factory golem evolution
+
+At level 10, the Earth and Water golems evolve into Guardians (+50% health), while Air and Fire evolve into Ravagers (+50% damage). The bonus multiplies the existing level and golem upgrade factors once. The factory applies it when spawning the unit. A saved golem uses its recorded level. Evolution follows creature levels across resets and requires no extra save fields.

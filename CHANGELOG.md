@@ -1,4 +1,6 @@
 # Changelog
+## 0.7.0 — factory unit evolution
+- Level 10 Earth and Water golems gain Guardian health. Air and Fire golems gain Ravager damage. Factory previews include the evolved stats.
 
 ## 0.6.0 — Necropolis
 - Build an Ossuary or Spirit Well with prestige points. Both buildings persist through prestige and ascension.

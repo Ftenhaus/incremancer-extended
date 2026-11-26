@@ -109,3 +109,22 @@ test('necropolis purchases validate the building, budget and ownership on legacy
   assert.equal(context.persistentData.necropolis.ossuary, true);
   assert.equal(saves, 1);
 });
+
+test('factory evolution applies the appropriate bonus once at and above level ten', () => {
+  const stats = extract('statsAtLevel(creature, level) {', 'creature,level');
+  const factory = {
+    creatureScaling: 1.75, gameModel: {golemHealthPCMod: 2, golemDamagePCMod: 3},
+    types: {earthGolem: 1, waterGolem: 4}, evolution: extract('evolution(creature) {', 'creature'),
+    purchasePrice: creature => creature.level * 10
+  };
+  for (const type of [1, 2, 3, 4]) {
+    const guardian = [1, 4].includes(type);
+    for (const level of [9, 10, 11]) {
+      const result = stats.call(factory, {type, baseHealth: 100, baseDamage: 20}, level);
+      const scale = 1.75 ** (level - 1);
+      assert.equal(result.health, 100 * scale * 2 * (guardian && level >= 10 ? 1.5 : 1));
+      assert.equal(result.damage, 20 * scale * 3 * (!guardian && level >= 10 ? 1.5 : 1));
+      assert.equal(result.cost, level * 10);
+    }
+  }
+});

@@ -28,7 +28,7 @@ const NECROPOLIS_BUILDINGS = Object.freeze([
   {id: "ossuary", name: "Ossuary", cost: 50, effect: "+2 base zombie health"},
   {id: "spiritWell", name: "Spirit Well", cost: 100, effect: "+1 base energy per second"}
 ]);
-const FORK_VERSION = "v0.6.0-dev";
+const FORK_VERSION = "v0.7.0-dev";
 const FORK_VERSION_DATE = "2026-11-26";
 console.log("[Incremancer Extended] " + FORK_VERSION + " (" + FORK_VERSION_DATE + ")");
 var Incremancer;
@@ -1026,11 +1026,23 @@ var Incremancer;
     resetLevels() {
       for (let e = 0; e < this.creatures.length; e++) this.creatures[e].level = 1
     }
-    spawnCreature(e) {
-      const t = new Ue,
-        s = e.baseHealth * Math.pow(this.creatureScaling, e.level - 1) * this.gameModel.golemHealthPCMod,
-        i = e.baseDamage * Math.pow(this.creatureScaling, e.level - 1) * this.gameModel.golemDamagePCMod;
-      t.spawnCreature(s, i, e.speed, e.type, e.level, this.purchasePrice(e))
+    evolution(creature) {
+      return creature.type === this.types.earthGolem || creature.type === this.types.waterGolem
+        ? "Guardian" : "Ravager";
+    }
+    statsAtLevel(creature, level) {
+      const form = level >= 10 ? this.evolution(creature) : null;
+      const scaling = Math.pow(this.creatureScaling, level - 1);
+      return {
+        level,
+        health: creature.baseHealth * scaling * this.gameModel.golemHealthPCMod * (form === "Guardian" ? 1.5 : 1),
+        damage: creature.baseDamage * scaling * this.gameModel.golemDamagePCMod * (form === "Ravager" ? 1.5 : 1),
+        cost: this.purchasePrice({...creature, level})
+      };
+    }
+    spawnCreature(creature) {
+      const stats = this.statsAtLevel(creature, creature.level);
+      (new Ue).spawnCreature(stats.health, stats.damage, creature.speed, creature.type, creature.level, stats.cost);
     }
     spawnSavedCreatures() {
       if (!this.spawnedSavedCreatures) {
@@ -1039,25 +1051,15 @@ var Incremancer;
           if (e++, e <= this.gameModel.creatureLimit) {
             const e = this.gameModel.persistentData.savedCreatures[t],
               s = this.creatures.filter((t => t.type == e.t))[0];
-            s.level = e.l, this.spawnCreature(s)
+            if (s) this.spawnCreature({...s, level: e.l})
           } this.spawnedSavedCreatures = !0
       }
     }
     creatureStats(e) {
       return {
-        thisLevel: {
-          level: e.level,
-          health: e.baseHealth * Math.pow(this.creatureScaling, e.level - 1) * this.gameModel.golemHealthPCMod,
-          damage: e.baseDamage * Math.pow(this.creatureScaling, e.level - 1) * this.gameModel.golemDamagePCMod,
-          cost: e.baseCost * Math.pow(this.creatureCostScaling, e.level - 1)
-        },
-        nextLevel: {
-          level: e.level + 1,
-          health: e.baseHealth * Math.pow(this.creatureScaling, e.level) * this.gameModel.golemHealthPCMod,
-          damage: e.baseDamage * Math.pow(this.creatureScaling, e.level) * this.gameModel.golemDamagePCMod,
-          cost: e.baseCost * Math.pow(this.creatureCostScaling, e.level)
-        }
-      }
+        thisLevel: this.statsAtLevel(e, e.level),
+        nextLevel: this.statsAtLevel(e, e.level + 1)
+      };
     }
   }
   class re {
@@ -6822,6 +6824,7 @@ var Incremancer;
         e.autobuild + t >= 0 && e.autobuild + t <= c.model.creatureLimit && o.creatureAutoBuildNumber(e, t)
       },
       creatureStats: e => o.creatureStats(e),
+      evolution: creature => o.evolution(creature),
       updateDelays() {
         this.delays = [];
         for (let e = 0; e < r.generatorsApplied.length; e++) this.delays[r.generatorsApplied[e].id] = (-1 * (r.generatorsApplied[e].time - r.generatorsApplied[e].timeLeft)).toFixed(2)
