@@ -20,3 +20,10 @@ Run `node --test tests/balance.test.mjs` using Node 20+. Tests extract actual ar
 
 ## Release gate
 No modified game deployment before upstream license and asset permissions are verified. Preserve attribution. No balance constants changed in this commit.
+
+## v0.2.0 rank price numeric limits
+For positive base and growth, the rounded price uses base × growth^rank × priceFactor^ascension. An overflowing undiscounted price or an underflowing discount can hide a representable result. Combine exponents in log space in those cases, preserving ordinary price arithmetic elsewhere.
+
+## Prestige production after rank 100
+
+Use the existing compounding curve through rank 100. Each subsequent rank adds the absolute production gain from rank 99 to 100. This keeps the transition increasing, bounds the calculation at 40 iterations, and leaves room for other production modifiers in the game's Number arithmetic. The cutoff is provisional pending economy simulation. Saved ranks retain their value as inputs to this curve.

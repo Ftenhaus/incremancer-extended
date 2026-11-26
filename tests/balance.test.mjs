@@ -25,7 +25,19 @@ test('bulk geometric cost matches unrounded sum',()=>{for(const m of [1,1.1,1.22
 test('bulk affordability away from rounding boundaries',()=>{assert.equal(affordable(10,1.225,5,bulk(10,1.225,5,10)*1.001),10);});
 test('skeleton XP baseline',()=>{assert.equal(xp.call({persistent:{level:1}}),800);assert.ok(xp.call({persistent:{level:100}})>xp.call({persistent:{level:99}}));});
 test('enemy health must not decrease at level 2300',()=>assert.ok(hp(2300)>=hp(2299)));
-test('prestige must remain finite at rank 300',{todo:'Numeric architecture required'},()=>assert.ok(Number.isFinite(prestige({effect:.2},300))));
+test('prestige keeps the original curve through rank 100 and then grows linearly', () => {
+  const upgrade = {effect: 0.2};
+  let expected = 1.2 ** 60;
+  for (let rank = 61; rank <= 100; rank++) {
+    expected *= 1 + upgrade.effect * 1.05 ** (rank - 60);
+    assert.equal(prestige(upgrade, rank), expected);
+  }
+  const gain = expected - prestige(upgrade, 99);
+  for (const rank of [101, 300, Number.MAX_SAFE_INTEGER]) {
+    assert.equal(prestige(upgrade, rank), expected + (rank - 100) * gain);
+    assert.ok(Number.isFinite(prestige(upgrade, rank) * 1e100));
+  }
+});
 test('bulk cost must honor ascension',()=>{const ctx={currentRank:()=>0,gameModel:{persistentData:{ascensionLevel:1}}};assert.equal(extract('upgradeMaxPrice(e, t) {','e,t').call(ctx,{basePrice:10,multi:1.225},1),price.call(ctx,{basePrice:10,multi:1.225}));});
 test('brain prestige condition must match other resources',()=>assert.ok(!source.includes('brainsPCMod *= t > e.costType == this.costs.prestigePoints')));
 
@@ -34,3 +46,16 @@ test('upstream cloud login disabled',()=>assert.ok(source.includes('if (false &&
 
 test('enemy late curve monotonic',()=>{for(let n=85;n<=10000;n++)assert.ok(hp(n)>=hp(n-1),'level '+n);});
 test('rounded bulk quote matches individual prices and budget',()=>{const q=extract('function extendedBulkQuote(base, growth, rank, ascension, budget, limit) {','base,growth,rank,ascension,budget,limit');for(const a of [0,1,5,20]){const total=Array.from({length:10},(_,i)=>Math.round(10*1.225**(5+i)*.5**a)).reduce((x,y)=>x+y,0);assert.equal(q(10,1.225,5,a,total,10).total,total);assert.equal(q(10,1.225,5,a,total,10).count,10);}assert.equal(q(10,1,0,100,0,Infinity).count,1000);});
+
+test('ascension discount offsets overflow in single and bulk rank prices', () => {
+  const upgrade = extract('upgradePrice(e) {', 'e');
+  const quote = extract('function extendedBulkQuote(base, growth, rank, ascension, budget, limit) {', 'base,growth,rank,ascension,budget,limit');
+  for (const rank of [1024, 1100]) {
+    const context = {currentRank: () => rank, gameModel: {persistentData: {ascensionLevel: rank}}};
+    assert.equal(price.call(context, {basePrice: 10, multi: 2}), 10);
+    assert.equal(upgrade.call(context, {basePrice: 10, multiplier: 2}), 10);
+    const result = quote(10, 2, rank, rank, 30, 3);
+    assert.equal(result.count, 2);
+    assert.equal(result.total, 30);
+  }
+});

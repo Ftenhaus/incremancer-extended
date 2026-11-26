@@ -1,9 +1,16 @@
-const EXTENDED_BALANCE = Object.freeze({ prestige: Object.freeze({ costGrowth: 1.225, resourceEffect: 0.2, bonusStart: 60, bonusGrowth: 0.05 }), ascension: Object.freeze({ priceFactor: 0.5, speedFactor: 2 }), skeleton: Object.freeze({ xpBase: 800, xpExponent: 1.9 }), enemy: Object.freeze({ growth85: 1.015, growth499: 1.03, growth999: 1.021, growth1499: 1.025, growth2300: 1.025 }) });
+const EXTENDED_BALANCE = Object.freeze({ prestige: Object.freeze({ costGrowth: 1.225, resourceEffect: 0.2, bonusStart: 60, bonusGrowth: 0.05, linearStart: 100 }), ascension: Object.freeze({ priceFactor: 0.5, speedFactor: 2 }), skeleton: Object.freeze({ xpBase: 800, xpExponent: 1.9 }), enemy: Object.freeze({ growth85: 1.015, growth499: 1.03, growth999: 1.021, growth1499: 1.025, growth2300: 1.025 }) });
 const EXTENDED_STORAGE = Object.freeze({ game: "incremancer-extended:game", skeleton: "incremancer-extended:skeleton", talents: "incremancer-extended:talents" });
 // Limit each bulk action to avoid unbounded synchronous loops (including free ranks).
 const EXTENDED_BULK_LIMIT = 1000;
 function extendedRankPrice(base, growth, rank, ascension) {
-  return Math.round(base * Math.pow(growth, rank) * Math.pow(EXTENDED_BALANCE.ascension.priceFactor, ascension || 0));
+  const factor = EXTENDED_BALANCE.ascension.priceFactor;
+  const undiscounted = base * Math.pow(growth, rank);
+  const discount = Math.pow(factor, ascension || 0);
+  if (base > 0 && growth > 0 && (!Number.isFinite(undiscounted) || discount === 0)) {
+    const exponent = Math.log2(base) + rank * Math.log2(growth) + (ascension || 0) * Math.log2(factor);
+    return Math.round(2 ** exponent);
+  }
+  return Math.round(undiscounted * discount);
 }
 function extendedBulkQuote(base, growth, rank, ascension, budget, limit) {
   let count = 0, total = 0;
@@ -895,7 +902,7 @@ var Incremancer;
       return 0
     }
     purchasePrice(e) {
-      return Math.round(e.basePrice * Math.pow(e.multi, this.currentRank(e)) * Math.pow(EXTENDED_BALANCE.ascension.priceFactor, this.gameModel.persistentData.ascensionLevel || 0))
+      return extendedRankPrice(e.basePrice, e.multi, this.currentRank(e), this.gameModel.persistentData.ascensionLevel)
     }
     upgradeMaxAffordable(e) {
       const t = this.currentRank(e);
@@ -2462,11 +2469,14 @@ var Incremancer;
 
       let multiplier = Math.pow(1 + e.effect, EXTENDED_BALANCE.prestige.bonusStart);
 
-      for (let i = 1; i <= t - EXTENDED_BALANCE.prestige.bonusStart; i++) {
+      const linearStart = EXTENDED_BALANCE.prestige.linearStart;
+      let previous = multiplier;
+      for (let i = 1; i <= Math.min(t, linearStart) - EXTENDED_BALANCE.prestige.bonusStart; i++) {
+        previous = multiplier;
         multiplier *= 1 + e.effect * Math.pow(1 + EXTENDED_BALANCE.prestige.bonusGrowth, i);
       }
 
-      return multiplier;
+      return multiplier + Math.max(0, t - linearStart) * (multiplier - previous);
     }
     applyConstructionUpgrade(e) {
       switch (e.type) {
@@ -2703,7 +2713,7 @@ var Incremancer;
       return 0
     }
     upgradePrice(e) {
-      return Math.round(e.basePrice * Math.pow(e.multiplier, this.currentRank(e)) * Math.pow(EXTENDED_BALANCE.ascension.priceFactor, this.gameModel.persistentData.ascensionLevel || 0))
+      return extendedRankPrice(e.basePrice, e.multiplier, this.currentRank(e), this.gameModel.persistentData.ascensionLevel)
     }
     upgradeMaxAffordable(e) {
       const t = this.currentRank(e);
