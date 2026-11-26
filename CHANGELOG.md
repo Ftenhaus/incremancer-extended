@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.0
+- Verified the fresh start, accelerated frontier combat, seal reward, archive selection, equipment comparison, golem spawn and shop automation controls in Chromium.
+- Save exports include their own timestamp. File imports persist immediately and survive reload. An export from develop commit a51b853 retained prestige points and Skeleton Champion progression.
+
+
 ## 0.9.0 — Soul Archive
 - Realm seals unlock three persistent memories. Attune one from Level Select for an energy, storage or combat bonus.
 

@@ -33,7 +33,7 @@ const SOUL_MEMORIES = Object.freeze([
   {id: "scholar", name: "Lost Scholar", seals: 2, bonus: "+50 base brain storage"},
   {id: "hunter", name: "Last Hunter", seals: 3, bonus: "+1 base zombie damage"}
 ]);
-const FORK_VERSION = "v0.9.0-dev";
+const FORK_VERSION = "v1.0.0";
 const FORK_VERSION_DATE = "2026-11-26";
 console.log("[Incremancer Extended] " + FORK_VERSION + " (" + FORK_VERSION_DATE + ")");
 var Incremancer;
@@ -1801,9 +1801,10 @@ var Incremancer;
       this.app && (this.app.renderer.resolution = e, this.app.renderer.rootRenderTarget && (this.app.renderer.rootRenderTarget.resolution = e), this.app.renderer.plugins.interaction.resolution = e, this.app.renderer.resize(document.body.clientWidth, document.body.clientHeight))
     }
     downloadSaveGame() {
-      this.persistentData.skeleton = this.skeleton.persistent, this.persistentData.skeletonTalents = this.skeleton.talents, this.blob = new Blob([LZString.compressToEncodedURIComponent(JSON.stringify(this.persistentData))], {
-        type: "octet/stream"
-      }), delete this.persistentData.skeleton, this.encodedContent = window.URL.createObjectURL(this.blob);
+      const save = {...this.persistentData, dateOfSave: Date.now(), skeleton: this.skeleton.persistent, skeletonTalents: this.skeleton.talents};
+      this.blob = new Blob([LZString.compressToEncodedURIComponent(JSON.stringify(save))], {type: "octet/stream"});
+      if (this.encodedContent) window.URL.revokeObjectURL(this.encodedContent);
+      this.encodedContent = window.URL.createObjectURL(this.blob);
       const e = (new Date).toISOString().replace(/:|T|Z|\./g, "");
       this.savefilename = "incremancer-" + e + ".sav"
     }
@@ -1815,7 +1816,7 @@ var Incremancer;
           i = GameModel.getInstance();
         s.onload = function(e) {
           const t = JSON.parse(LZString.decompressFromEncodedURIComponent(e.target.result));
-          t.dateOfSave ? (t.skeleton && (i.skeleton.persistent = t.skeleton, delete t.skeleton, !('gearSetEquipped' in i.skeleton.persistent) && (i.skeleton.persistent.gearSetEquipped = -1), !('gearSets' in i.skeleton.persistent) && (i.skeleton.persistent.gearSets = [])), t.skeletonTalents ? (i.skeleton.talents = t.skeletonTalents, delete t.skeletonTalents) : i.skeleton.talents = [], i.persistentData = t, i.migrateSave(), i.updatePersistentData(), i.saveToPlayFab(), i.level = i.persistentData.levelUnlocked, i.creatureFactory.spawnedSavedCreatures = !1, i.setupLevel()) : alert("Error loading save game")
+          t.dateOfSave ? (t.skeleton && (i.skeleton.persistent = t.skeleton, delete t.skeleton, !('gearSetEquipped' in i.skeleton.persistent) && (i.skeleton.persistent.gearSetEquipped = -1), !('gearSets' in i.skeleton.persistent) && (i.skeleton.persistent.gearSets = [])), t.skeletonTalents ? (i.skeleton.talents = t.skeletonTalents, delete t.skeletonTalents) : i.skeleton.talents = [], i.persistentData = t, i.migrateSave(), i.updatePersistentData(), i.saveData(), i.level = i.persistentData.levelUnlocked, i.creatureFactory.spawnedSavedCreatures = !1, i.setupLevel()) : alert("Error loading save game")
         }, s.readAsText(t)
       }
     }

@@ -1,4 +1,8 @@
-# Incremancer (Unified Fork)
+# Incremancer Extended
+
+v1.0.0 adds the Necropolis, factory golem evolution, Dark Realms and the Soul Archive. [Play on GitHub Pages](https://ftenhaus.github.io/incremancer-extended/).
+
+Run `node --test tests/balance.test.mjs` for regressions and `node tools/simulate-economy.mjs` for the balance simulation. With Python Playwright and Chromium installed, run `python3 tests/release_browser.py` for the isolated browser playtest.
 
 Idle Necromancer Game — a unified fork combining features from CirusDane's and FrAmed46's mods.
 
