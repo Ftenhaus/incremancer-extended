@@ -1,0 +1,22 @@
+# Balance audit — v0.1.0
+
+Source: dist/bundle.js, upstream v1.1.0. No gameplay changes in this audit.
+
+| Formula | Current behavior | Risk |
+|---|---|---|
+| Generator purchasePrice | round(base * multi^rank * 0.5^ascension) | Bulk helpers omit ascension and rounding |
+| Bulk price l | base * multi^rank * (multi^count - 1)/(multi - 1); linear when multi=1 | Floating point boundary errors |
+| Bulk affordability h | inverse geometric series, floored | Exact budget boundary precision |
+| Prestige resource bonus | (1+effect)^rank up to 60; then multiply by 1+effect*1.05^i for each extra rank | Infinity by rank 300 for effect 0.2 |
+| Enemy getMaxHealth | Piecewise linear then exponential | Ratio at 999 = 7.06585; at 2300 = 0.0450955 |
+| Skeleton XP | 800 * level^1.9 | Migration loop cap 99999 requires review |
+| Brain prestige | t > e.costType == this.costs.prestigePoints | Operator precedence inconsistent with other resource bonuses |
+
+## Save constraints
+Existing localStorage keys include ZombieData and incremancerskele; talent storage and import/export paths require full inventory before migration. Use a distinct namespace, explicit import, backup, and regression tests. Never silently delete original saves.
+
+## Tests
+Run `node --test tests/balance.test.mjs` using Node 20+. Tests extract actual arithmetic methods from the local bundle, not duplicated formulas. Known defects are marked TODO until fixed. Extraction is deliberately limited and depends on current method signatures; replace with direct module imports after modularization. Browser integration, full economy simulation and save migration tests remain outstanding.
+
+## Release gate
+No modified game deployment before upstream license and asset permissions are verified. Preserve attribution. No balance constants changed in this commit.
