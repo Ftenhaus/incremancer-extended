@@ -28,3 +28,6 @@ test('enemy health must not decrease at level 2300',{todo:'Known upstream defect
 test('prestige must remain finite at rank 300',{todo:'Numeric architecture required'},()=>assert.ok(Number.isFinite(prestige({effect:.2},300))));
 test('bulk cost must honor ascension',{todo:'Known mismatch; unrounded bulk pricing also needs review'},()=>{const ctx={currentRank:()=>0,gameModel:{persistentData:{ascensionLevel:1}}};assert.equal(bulk(10,1.225,0,1),price.call(ctx,{basePrice:10,multi:1.225}));});
 test('brain prestige condition must match other resources',{todo:'Review actual upgrade application before fixing'},()=>assert.ok(!source.includes('brainsPCMod *= t > e.costType == this.costs.prestigePoints')));
+
+test('Extended storage names are unique and legacy keys are not assigned',()=>{const keys=vm.runInNewContext(source.slice(0,source.indexOf('const FORK_VERSION'))+'\nObject.values(EXTENDED_STORAGE)');assert.equal(new Set(keys).size,3);for(const key of keys)assert.ok(key.startsWith('incremancer-extended:'));for(const key of ['ZombieData','incremancerskele','incremancertalents'])assert.ok(!source.includes('StorageName = "'+key+'"')&&!source.includes('storageName = "'+key+'"'));});
+test('upstream cloud login disabled',()=>assert.ok(source.includes('if (false && window.kongregate) try {')));
