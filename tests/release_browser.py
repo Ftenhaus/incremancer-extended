@@ -32,12 +32,12 @@ try:
         page.evaluate("""() => {
           const z=game(), m=z.model;
           localStorage.setItem('ZombieData', 'legacy sentinel');
-          m.persistentData.levelUnlocked=51;
-          m.startLevel(51);
+          m.persistentData.levelUnlocked=501;
+          m.startLevel(501);
           z.levelSelect.shown=true;
           angular.element(document.body).scope().$apply();
         }""")
-        page.get_by_role("button", name="Enter trial at frontier level 50 or higher").evaluate("b=>b.click()")
+        page.get_by_role("button", name="Enter trial at frontier level 500 or higher").evaluate("b=>b.click()")
         page.wait_for_function("game().model.humans.aliveHumans.length > 0")
         # Accelerate combat through the actual damage handler, leaving victory and rewards to the game loop.
         page.wait_for_function("""() => {
@@ -74,6 +74,29 @@ try:
           const expected=factory.creatureStats(creature).thisLevel;factory.spawnCreature(creature);
           const unit=m.creatures.creatures.at(-1);
           return unit.level===10 && unit.attackDamage===expected.damage && unit.health===expected.health}""")
+        # Compare actual game stats at each boundary using independent prepared frontiers.
+        for seals, frontier, expected in [(0, 500, [0.5, 1, 1]), (1, 900, [1, 2, 1]),
+                                          (2, 1250, [1, 1, 0.5]), (8, 2500, [1, 2, 0.5])]:
+            result = page.evaluate("""([seals,level]) => {
+              const m=game().model,d=m.persistentData;
+              d.realmSeals=seals; delete d.realmTrial; delete d.deepRealmClears;
+              m.level=d.levelUnlocked=level-1; m.enterDarkRealm();
+              if(d.realmTrial || m.nextRealmLevel!==level) throw Error("Incorrect trial gate");
+              m.level=d.levelUnlocked=level; m.resetToBaseStats();
+              const base=[m.zombieDamage,m.zombieCost,m.zombieHealth];
+              m.enterDarkRealm();m.resetToBaseStats();
+              const ratios=[m.zombieDamage,m.zombieCost,m.zombieHealth].map((n,i)=>n/base[i]);
+              m.finishDarkRealm();m.finishDarkRealm();
+              if(d.realmSeals!==seals+1) throw Error("Incorrect reward");
+              if(level===2500 && (d.deepRealmClears!==1 || m.nextRealmLevel!==2750)) throw Error("Deep Realm progression");
+              return ratios;
+            }""", [seals, frontier])
+            assert result == expected, (frontier, result)
+        assert page.evaluate("""()=>{const m=game().model,d=m.persistentData;
+          d.realmSeals=2; d.realmTrial=m.level=125;delete d.realmRule;
+          delete d.progressionVersion;d.creatureLevels=[0,10];d.soulMemory='scholar';d.necropolis={ossuary:true};
+          m.migrateSave();m.finishDarkRealm();return d.realmSeals===3 && d.legacyEvolutions.includes(1)
+            && d.soulMemory==='scholar' && d.necropolis.ossuary && !d.realmTrial}""")
         assert not errors, errors
         browser.close()
         print("Passed fresh start, Dark Realm victory, Soul Archive, file export/import and reload.")

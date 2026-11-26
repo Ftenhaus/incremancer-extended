@@ -25,15 +25,22 @@ function extendedBulkQuote(base, growth, rank, ascension, budget, limit) {
   return {count, total};
 }
 const NECROPOLIS_BUILDINGS = Object.freeze([
-  {id: "ossuary", name: "Ossuary", cost: 50, effect: "+2 base zombie health"},
-  {id: "spiritWell", name: "Spirit Well", cost: 100, effect: "+1 base energy per second"}
+  {id: "ossuary", name: "Ossuary", level: 150, cost: 50, effect: "+2 base zombie health"},
+  {id: "spiritWell", name: "Spirit Well", level: 200, cost: 100, effect: "+1 base energy per second"}
 ]);
 const SOUL_MEMORIES = Object.freeze([
   {id: "spark", name: "First Spark", seals: 1, bonus: "+5 energy capacity"},
   {id: "scholar", name: "Lost Scholar", seals: 2, bonus: "+50 base brain storage"},
   {id: "hunter", name: "Last Hunter", seals: 3, bonus: "+1 base zombie damage"}
 ]);
-const FORK_VERSION = "v1.0.0";
+const REALM_RULES = [
+  "Half base zombie damage", "Double base zombie summoning cost",
+  "Half base zombie health", "Half base zombie health and double base summoning cost"
+];
+function progressionLevel(data) {
+  return Math.max(data.levelUnlocked || 1, (data.allTimeHighestLevel || 0) + 1);
+}
+const FORK_VERSION = "v1.1.0";
 const FORK_VERSION_DATE = "2026-11-26";
 console.log("[Incremancer Extended] " + FORK_VERSION + " (" + FORK_VERSION_DATE + ")");
 var Incremancer;
@@ -1036,7 +1043,7 @@ var Incremancer;
         ? "Guardian" : "Ravager";
     }
     statsAtLevel(creature, level) {
-      const form = level >= 10 ? this.evolution(creature) : null;
+      const form = level >= 10 && (progressionLevel(this.gameModel.persistentData) >= 200 || this.gameModel.persistentData.legacyEvolutions?.includes(creature.id)) ? this.evolution(creature) : null;
       const scaling = Math.pow(this.creatureScaling, level - 1);
       return {
         level,
@@ -1267,6 +1274,7 @@ var Incremancer;
           activeSpellBuffs: [],
           skeleton: null,
           skeletonTalents: [],
+          progressionVersion: 2,
           saveVersion: "2.0.0",
           forkOrigin: "unified",
           ascensionLevel: 0
@@ -1275,13 +1283,14 @@ var Incremancer;
     static getInstance() {
       return GameModel.instance || (GameModel.instance = new GameModel, GameModel.instance.particles = new Qe, GameModel.instance.trophies = new TrophyDef, GameModel.instance.bones = new Bones, GameModel.instance.creatureFactory = new ae, GameModel.instance.creatures = new Ue, GameModel.instance.boneCollectors = new BoneCollectors, GameModel.instance.spiderCollectors = new SpiderCollector, GameModel.instance.graveyard = new Graveyard, GameModel.instance.spells = new SpellSystem, GameModel.instance.partFactory = new se, GameModel.instance.skeleton = new SkeletonChampion, GameModel.instance.upgrades = new UpgradeManager, GameModel.instance.zombies = new Zombies, GameModel.instance.humans = new Humans, GameModel.instance.police = new PoliceManager, GameModel.instance.army = new Te), GameModel.instance
     }
+    get progressionLevel() { return progressionLevel(this.persistentData); }
     get necropolisBuildings() {
       return NECROPOLIS_BUILDINGS;
     }
     buildNecropolis(id) {
       const building = NECROPOLIS_BUILDINGS.find(entry => entry.id === id);
       const data = this.persistentData;
-      if (!building || data.necropolis?.[id] || !(data.prestigePointsToSpend >= building.cost)) return;
+      if (!building || progressionLevel(data) < building.level || data.necropolis?.[id] || !(data.prestigePointsToSpend >= building.cost)) return;
       data.necropolis = {...data.necropolis, [id]: true};
       data.prestigePointsToSpend -= building.cost;
       this.upgrades.applyUpgrades();
@@ -1289,17 +1298,18 @@ var Incremancer;
     }
     resetToBaseStats() {
       const data = this.persistentData;
+      const rule = data.realmTrial === this.level ? (data.realmRule || 0) : -1;
       const memory = SOUL_MEMORIES.find(entry => entry.id === data.soulMemory && data.realmSeals >= entry.seals)?.id;
       this.energyRate = this.baseStats.energyRate + (this.persistentData.necropolis?.spiritWell ? 1 : 0),
         this.brainsRate = this.baseStats.brainsRate,
         this.bonesRate = this.baseStats.bonesRate,
-        this.energyMax = this.baseStats.energyMax + (memory === "spark" ? 5 : 0),
+        this.energyMax = this.baseStats.energyMax + (memory === "spark" ? 5 : 0) + (data.deepRealmClears > 0 ? 10 : 0),
         this.bloodMax = this.baseStats.bloodMax,
         this.brainsMax = this.baseStats.brainsMax + (memory === "scholar" ? 50 : 0),
-        this.zombieHealth = this.baseStats.zombieHealth + (this.persistentData.necropolis?.ossuary ? 2 : 0),
-        this.zombieDamage = (this.baseStats.zombieDamage + (memory === "hunter" ? 1 : 0)) * (this.persistentData.realmTrial === this.level ? 0.5 : 1),
+        this.zombieHealth = (this.baseStats.zombieHealth + (this.persistentData.necropolis?.ossuary ? 2 : 0)) * (rule >= 2 ? 0.5 : 1),
+        this.zombieDamage = (this.baseStats.zombieDamage + (memory === "hunter" ? 1 : 0)) * (rule === 0 ? 0.5 : 1),
         this.zombieSpeed = this.baseStats.zombieSpeed,
-        this.zombieCost = this.baseStats.zombieCost,
+        this.zombieCost = this.baseStats.zombieCost * (rule === 1 || rule === 3 ? 2 : 1),
         this.zombieCages = 0,
         this.brainRecoverChance = 0,
         this.riseFromTheDeadChance = 0,
@@ -1580,20 +1590,28 @@ var Incremancer;
       this.saveData();
     }
     get nextRealmLevel() {
-      return 50 + 25 * (this.persistentData.realmSeals || 0);
+      const seals = this.persistentData.realmSeals || 0;
+      return [500, 900, 1250][seals] ?? 2500 + 250 * (this.persistentData.deepRealmClears || 0);
+    }
+    get nextRealmRule() { return Math.min(this.persistentData.realmSeals || 0, 3); }
+    get realmDescription() {
+      return REALM_RULES[this.persistentData.realmTrial ? (this.persistentData.realmRule || 0) : this.nextRealmRule];
     }
     enterDarkRealm() {
       const data = this.persistentData;
       if (data.realmTrial || this.level !== data.levelUnlocked || this.level < this.nextRealmLevel) return;
       data.realmTrial = this.level;
+      data.realmRule = this.nextRealmRule;
       this.trophyHuntMode = this.bossRushMode = false;
       this.startLevel(this.level);
       this.saveData();
     }
     finishDarkRealm() {
       const data = this.persistentData;
-      if (data.realmTrial !== this.level || this.level < this.nextRealmLevel) return;
+      if (data.realmTrial !== this.level) return;
+      if (data.realmRule === 3) data.deepRealmClears = (data.deepRealmClears || 0) + 1;
       delete data.realmTrial;
+      delete data.realmRule;
       data.realmSeals = (data.realmSeals || 0) + 1;
       data.prestigePointsToSpend = (data.prestigePointsToSpend || 0) + 25;
       this.sendMessage("Dark Realm cleared. Earned a realm seal and 25 prestige points.", "chat-levelup");
@@ -1719,6 +1737,11 @@ var Incremancer;
       return { level: level, remainingXP: remaining };
     }
     migrateSave() {
+      const data = this.persistentData;
+      if (!data.progressionVersion) {
+        data.legacyEvolutions = [1, 2, 3, 4].filter(id => data.creatureLevels?.[id] >= 10 || data.savedCreatures?.some(unit => unit.t === id && unit.l >= 10));
+        data.progressionVersion = 2;
+      }
       var skel = this.skeleton.persistent;
       if (!skel) return;
       var origin = this.detectSaveOrigin();

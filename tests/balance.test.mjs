@@ -103,7 +103,7 @@ test('equipment XP grants multiple exact-threshold levels while the champion is 
 test('necropolis purchases validate the building, budget and ownership on legacy saves', () => {
   const build = extract('buildNecropolis(id) {', 'id');
   let saves = 0;
-  const context = {persistentData: {prestigePointsToSpend: 50}, upgrades: {applyUpgrades() {}}, saveData() { saves++; }};
+  const context = {persistentData: {levelUnlocked: 150, prestigePointsToSpend: 50}, upgrades: {applyUpgrades() {}}, saveData() { saves++; }};
   for (const id of ['unknown', 'spiritWell', 'ossuary', 'ossuary']) build.call(context, id);
   assert.equal(context.persistentData.prestigePointsToSpend, 0);
   assert.equal(context.persistentData.necropolis.ossuary, true);
@@ -113,7 +113,7 @@ test('necropolis purchases validate the building, budget and ownership on legacy
 test('factory evolution applies the appropriate bonus once at and above level ten', () => {
   const stats = extract('statsAtLevel(creature, level) {', 'creature,level');
   const factory = {
-    creatureScaling: 1.75, gameModel: {golemHealthPCMod: 2, golemDamagePCMod: 3},
+    creatureScaling: 1.75, gameModel: {persistentData: {levelUnlocked: 200}, golemHealthPCMod: 2, golemDamagePCMod: 3},
     types: {earthGolem: 1, waterGolem: 4}, evolution: extract('evolution(creature) {', 'creature'),
     purchasePrice: creature => creature.level * 10
   };
@@ -162,4 +162,28 @@ test('soul archive honors existing seals and only persists eligible changes', ()
   assert.equal(model.energy, 10);
   assert.equal(data.brains, 50);
   assert.equal(saves, 2);
+});
+
+test('building and golem gates use the highest reached frontier across resets', () => {
+  const build = extract('buildNecropolis(id) {', 'id');
+  const stats = extract('statsAtLevel(creature, level) {', 'creature,level');
+  const data = {levelUnlocked: 149, prestigePointsToSpend: 150};
+  const model = {persistentData: data, upgrades: {applyUpgrades() {}}, saveData() {},
+    golemHealthPCMod: 1, golemDamagePCMod: 1};
+  const factory = {gameModel: model, creatureScaling: 1, evolution: () => 'Guardian', purchasePrice: () => 1};
+  const unit = {id: 1, baseHealth: 10, baseDamage: 1};
+  build.call(model, 'ossuary');
+  assert.equal(data.necropolis, undefined);
+  data.levelUnlocked = 150;
+  build.call(model, 'ossuary');
+  assert.ok(data.necropolis.ossuary);
+  data.levelUnlocked = 199;
+  build.call(model, 'spiritWell');
+  assert.equal(data.necropolis.spiritWell, undefined);
+  assert.equal(stats.call(factory, unit, 10).health, 10);
+  data.levelUnlocked = 1;
+  data.allTimeHighestLevel = 199;
+  build.call(model, 'spiritWell');
+  assert.ok(data.necropolis.spiritWell);
+  assert.equal(stats.call(factory, unit, 10).health, 15);
 });

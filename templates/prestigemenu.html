@@ -14,8 +14,8 @@
       <h4>Necropolis</h4>
       <p>These buildings survive prestige and ascension.</p>
       <div ng-repeat="building in zm.model.necropolisBuildings track by building.id">
-        <p>{{building.name}} · {{building.effect}}</p>
-        <button ng-click="zm.model.buildNecropolis(building.id)" ng-disabled="zm.model.persistentData.necropolis[building.id] || !(zm.model.persistentData.prestigePointsToSpend >= building.cost)">{{zm.model.persistentData.necropolis[building.id] ? 'Built' : 'Build for ' + building.cost + ' points'}}</button>
+        <p>{{building.name}} · Level {{building.level}} · {{building.effect}}</p>
+        <button ng-click="zm.model.buildNecropolis(building.id)" ng-disabled="zm.model.progressionLevel < building.level || zm.model.persistentData.necropolis[building.id] || !(zm.model.persistentData.prestigePointsToSpend >= building.cost)">{{zm.model.persistentData.necropolis[building.id] ? 'Built' : 'Build for ' + building.cost + ' points'}}</button>
       </div>
     </div>
     <div ng-repeat="upgrade in zm.upgrades" class="upgrade bones">

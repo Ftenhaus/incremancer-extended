@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.0 — campaign pacing
+- Necropolis buildings open at frontiers 150 and 200. Factory evolution requires frontier 200 and creature level 10.
+- Dark Realms at 500, 900 and 1250 have distinct combat rules. The combined trial starts at 2500 and grants a permanent capacity bonus on first clear.
+- Earned seals, buildings, memories and active legacy trials carry forward.
+
 ## 1.0.0
 - Verified the fresh start, accelerated frontier combat, seal reward, archive selection, equipment comparison, golem spawn and shop automation controls in Chromium.
 - Save exports include their own timestamp. File imports persist immediately and survive reload. An export from develop commit a51b853 retained prestige points and Skeleton Champion progression.

@@ -49,3 +49,11 @@ A trial restarts the current frontier level with half base zombie damage. The fi
 ## Soul Archive
 
 Lifetime seals unlock three memories at one, two and three seals. One memory can be active at a time. Their flat base bonuses are +5 energy capacity, +50 brain storage or +1 zombie damage before the Dark Realm penalty. Switching is free. Existing seal counts qualify immediately. Only the selected memory ID is stored.
+
+## v1.1.0 campaign pacing
+
+Building access uses the highest frontier reached, including completed levels before prestige. Ossuary starts at 150. Spirit Well and rank-ten factory evolution start at 200. Previously owned buildings, memories, seal counts and identifiable evolved golem types carry forward. An active legacy trial keeps its original damage rule.
+
+Realm thresholds are 500 (half base zombie damage), 900 (double base summoning cost), 1250 (half base zombie health), then 2500 (both cost and health penalties). The first combined clear adds 10 permanent energy capacity. Further combined trials require 250 additional frontier levels each. Existing seals qualify for the same archive memories. Old seals do not skip the first combined trial.
+
+Browser fixtures compare effective base stats at each frontier against its ordinary stats and check the preceding level is locked. These deterministic scenarios measure mechanical difficulty, not real time to progress from a fresh save.

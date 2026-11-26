@@ -50,7 +50,7 @@
   <div class="upgrades" ng-if="zm.factoryTab == 'level'">
     <div ng-repeat="creature in zm.upgrades" class="upgrade parts">
       <h4>{{creature.name}} Level:{{creature.level}}</h4>
-      <p>{{creature.level >= 10 ? 'Evolved' : 'Evolves at level 10'}} · {{zm.factory.evolution(creature)}} ({{zm.factory.evolution(creature) == 'Guardian' ? '+50% health' : '+50% damage'}} on spawn)</p>
+      <p>{{creature.level >= 10 && (zm.model.progressionLevel >= 200 || zm.model.persistentData.legacyEvolutions.includes(creature.id)) ? 'Evolved' : 'Requires frontier 200 and golem level 10'}} · {{zm.factory.evolution(creature)}} ({{zm.factory.evolution(creature) == 'Guardian' ? '+50% health' : '+50% damage'}} on spawn)</p>
       <h4 class="cost">{{zm.factory.creatureLevelPrice(creature)|whole}} parts</h4>
       <div class="clear"></div>
       <button ng-click="zm.factory.levelCreature(creature);" ng-disabled="!zm.factory.canLevelCreature(creature)">{{zm.factory.creatureLevelButtonText(creature)}}
