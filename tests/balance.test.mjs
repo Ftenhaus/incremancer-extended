@@ -128,3 +128,24 @@ test('factory evolution applies the appropriate bonus once at and above level te
     }
   }
 });
+
+test('dark realm requires the frontier, persists entry and rewards each clear once', () => {
+  const enter = extract('enterDarkRealm() {', '');
+  const finish = extract('finishDarkRealm() {', '');
+  const data = {levelUnlocked: 50};
+  let saves = 0;
+  const model = {persistentData: data, level: 49, nextRealmLevel: 50,
+    startLevel(level) { assert.equal(level, 50); }, saveData() { saves++; }, sendMessage() {}};
+  enter.call(model);
+  assert.equal(data.realmTrial, undefined);
+  model.level = 50;
+  enter.call(model);
+  enter.call(model);
+  assert.equal(data.realmTrial, 50);
+  finish.call(model);
+  finish.call(model);
+  assert.equal(data.realmSeals, 1);
+  assert.equal(data.prestigePointsToSpend, 25);
+  assert.equal(data.realmTrial, undefined);
+  assert.equal(saves, 2);
+});

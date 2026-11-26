@@ -28,7 +28,7 @@ const NECROPOLIS_BUILDINGS = Object.freeze([
   {id: "ossuary", name: "Ossuary", cost: 50, effect: "+2 base zombie health"},
   {id: "spiritWell", name: "Spirit Well", cost: 100, effect: "+1 base energy per second"}
 ]);
-const FORK_VERSION = "v0.7.0-dev";
+const FORK_VERSION = "v0.8.0-dev";
 const FORK_VERSION_DATE = "2026-11-26";
 console.log("[Incremancer Extended] " + FORK_VERSION + " (" + FORK_VERSION_DATE + ")");
 var Incremancer;
@@ -1290,7 +1290,7 @@ var Incremancer;
         this.bloodMax = this.baseStats.bloodMax,
         this.brainsMax = this.baseStats.brainsMax,
         this.zombieHealth = this.baseStats.zombieHealth + (this.persistentData.necropolis?.ossuary ? 2 : 0),
-        this.zombieDamage = this.baseStats.zombieDamage,
+        this.zombieDamage = this.baseStats.zombieDamage * (this.persistentData.realmTrial === this.level ? 0.5 : 1),
         this.zombieSpeed = this.baseStats.zombieSpeed,
         this.zombieCost = this.baseStats.zombieCost,
         this.zombieCages = 0,
@@ -1437,7 +1437,7 @@ var Incremancer;
       if (this.level !== 5 || this.currentState !== this.states.levelCompleted) {
         this._trophyOfferTimerSet = false;
       }
-      this.spells.updateSpells(e), e *= this.gameSpeed, this.hidden && U(e, this.app), this.partFactory.update(e), this.autoRemoveCollectorsHarpies(), this.addEnergy(this.getEnergyRate() * e), this.currentState == this.states.playingLevel && (this.addBones(this.bonesRate * e), this.addBrains(this.brainsRate * e), this.upgrades.updateRunicSyphon(this.runicSyphon), this.lastSave + 3e4 < t && (this.saveData(), this.lastSave = t), this.lastPlayFabSave + 12e5 < t && this.saveToPlayFab(), this.getHumanCount() <= 0 && (this.endLevelTimer < 0 ? (this.isBossStage(this.level) && this.trophies.doesLevelHaveTrophy(this.level) && this.trophies.trophyAquired(this.level), this.prestigePointsEarned = this.prestigePointsForLevel(this.level), this.currentState = this.states.levelCompleted, this.levelResourcesAdded = !1, this.calculateEndLevelBones(), this.calculateEndLevelZombieCages(), this.persistentData.levelsCompleted.includes(this.level) || (this.addPrestigePoints(this.prestigePointsForLevel(this.level)), this.persistentData.levelsCompleted.push(this.level)), this.persistentData.levelUnlocked = this.level + 1, (!this.persistentData.allTimeHighestLevel || this.level > this.persistentData.allTimeHighestLevel) && (this.persistentData.allTimeHighestLevel = this.level, window.kongregate && window.kongregate.stats.submit("level", this.persistentData.allTimeHighestLevel))) : this.endLevelTimer -= e), this.upgrades.updateConstruction(e), this.upgrades.updateAutoUpgrades(), this.creatureFactory.update(e), this.updateNetLauncher(e)), this.currentState == this.states.levelCompleted && (this.startTimer -= e);
+      this.spells.updateSpells(e), e *= this.gameSpeed, this.hidden && U(e, this.app), this.partFactory.update(e), this.autoRemoveCollectorsHarpies(), this.addEnergy(this.getEnergyRate() * e), this.currentState == this.states.playingLevel && (this.addBones(this.bonesRate * e), this.addBrains(this.brainsRate * e), this.upgrades.updateRunicSyphon(this.runicSyphon), this.lastSave + 3e4 < t && (this.saveData(), this.lastSave = t), this.lastPlayFabSave + 12e5 < t && this.saveToPlayFab(), this.getHumanCount() <= 0 && (this.endLevelTimer < 0 ? (this.isBossStage(this.level) && this.trophies.doesLevelHaveTrophy(this.level) && this.trophies.trophyAquired(this.level), this.prestigePointsEarned = this.prestigePointsForLevel(this.level), this.currentState = this.states.levelCompleted, this.levelResourcesAdded = !1, this.calculateEndLevelBones(), this.calculateEndLevelZombieCages(), this.persistentData.levelsCompleted.includes(this.level) || (this.addPrestigePoints(this.prestigePointsForLevel(this.level)), this.persistentData.levelsCompleted.push(this.level)), this.persistentData.levelUnlocked = this.level + 1, (!this.persistentData.allTimeHighestLevel || this.level > this.persistentData.allTimeHighestLevel) && (this.persistentData.allTimeHighestLevel = this.level, window.kongregate && window.kongregate.stats.submit("level", this.persistentData.allTimeHighestLevel)), this.finishDarkRealm()) : this.endLevelTimer -= e), this.upgrades.updateConstruction(e), this.upgrades.updateAutoUpgrades(), this.creatureFactory.update(e), this.updateNetLauncher(e)), this.currentState == this.states.levelCompleted && (this.startTimer -= e);
       this.currentState == this.states.levelCompleted && this.startTimer < 0 && !(this.isMilestoneStage(this.level) && !this._milestoneHandled) && this.persistentData.autoStart && !this.bossRushMode && !this.trophyHuntMode && this.startLevel(this.level);
       this.currentState == this.states.levelCompleted && this.startTimer < 0 && !(this.isMilestoneStage(this.level) && !this._milestoneHandled) && this.bossRushMode && this.startLevel(Math.ceil((this.level + 1) / 50) * 50),
       this.currentState == this.states.levelCompleted && this.startTimer < 0 && !(this.isMilestoneStage(this.level) && !this._milestoneHandled) && this.trophyHuntMode && this.startLevel(this.level + 5 - this.level % 5),
@@ -1559,6 +1559,26 @@ var Incremancer;
     setMaxHarpies() {
       this.persistentData.harpies = this.computeMaxHarpies();
     }
+    get nextRealmLevel() {
+      return 50 + 25 * (this.persistentData.realmSeals || 0);
+    }
+    enterDarkRealm() {
+      const data = this.persistentData;
+      if (data.realmTrial || this.level !== data.levelUnlocked || this.level < this.nextRealmLevel) return;
+      data.realmTrial = this.level;
+      this.trophyHuntMode = this.bossRushMode = false;
+      this.startLevel(this.level);
+      this.saveData();
+    }
+    finishDarkRealm() {
+      const data = this.persistentData;
+      if (data.realmTrial !== this.level || this.level < this.nextRealmLevel) return;
+      delete data.realmTrial;
+      data.realmSeals = (data.realmSeals || 0) + 1;
+      data.prestigePointsToSpend = (data.prestigePointsToSpend || 0) + 25;
+      this.sendMessage("Dark Realm cleared. Earned a realm seal and 25 prestige points.", "chat-levelup");
+      this.saveData();
+    }
     startLevel(e) {
       this.level = e, this.startGame()
     }
@@ -1569,6 +1589,7 @@ var Incremancer;
       this._milestoneHandled = false, this.level++, this.currentState = this.states.playingLevel, this.setupLevel(), this.updatePlayingLevel(), this.persistentData.autoRelease && this.releaseCagedZombies()
     }
     setupLevel() {
+      if (this.persistentData.realmTrial !== this.level) delete this.persistentData.realmTrial;
       this.endLevelTimer = this.endLevelDelay, N(), this.particles.initialize(), this.humans.populate(), this.zombies.populate(), this.graveyard.initialize(), setTimeout(Z, 10), this.upgrades.applyUpgrades(), this.upgrades.updateRuneEffects(), this.partFactory.applyGenerators(), this.creatures.populate(), this.skeleton.populate(), function(){const spells = new SpellSystem; spells.spells.forEach(s => { if (s.active) { s.end(); spells.applySpellBuffEnd(s, this); s.start(); spells.applySpellBuffStart(s, this); } })}.call(this), this.addStartLevelResources(), this.populateStats(), SpiderCollector.instance && (SpiderCollector.instance.spiderTotalBones = 0, SpiderCollector.instance.spiderTotalParts = 0), this.chatLog.forEach(function(m) { m.count = 1 })
     }
     populateStats() {

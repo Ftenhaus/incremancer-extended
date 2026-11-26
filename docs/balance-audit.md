@@ -41,3 +41,7 @@ The Ossuary costs 50 unspent prestige points and adds 2 base zombie health. The 
 ## Factory golem evolution
 
 At level 10, the Earth and Water golems evolve into Guardians (+50% health), while Air and Fire evolve into Ravagers (+50% damage). The bonus multiplies the existing level and golem upgrade factors once. The factory applies it when spawning the unit. A saved golem uses its recorded level. Evolution follows creature levels across resets and requires no extra save fields.
+
+## Dark Realms
+
+A trial restarts the current frontier level with half base zombie damage. The first trial requires frontier level 50. Each seal raises the next threshold by 25 levels and grants 25 spendable prestige points. A clear consumes the active trial before saving. A different level, prestige or ascension ends the trial. Earned seals persist.

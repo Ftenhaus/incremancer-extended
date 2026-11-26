@@ -1,4 +1,6 @@
 # Changelog
+## 0.8.0 — Dark Realms
+- Challenge the current frontier from Level Select starting at level 50. Each clear awards one permanent seal and 25 spendable prestige points.
 ## 0.7.0 — factory unit evolution
 - Level 10 Earth and Water golems gain Guardian health. Air and Fire golems gain Ravager damage. Factory previews include the evolved stats.
 
