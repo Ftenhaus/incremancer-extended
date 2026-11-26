@@ -97,6 +97,24 @@ try:
           delete d.progressionVersion;d.creatureLevels=[0,10];d.soulMemory='scholar';d.necropolis={ossuary:true};
           m.migrateSave();m.finishDarkRealm();return d.realmSeals===3 && d.legacyEvolutions.includes(1)
             && d.soulMemory==='scholar' && d.necropolis.ossuary && !d.realmTrial}""")
+        page.evaluate("""()=>{const m=game().model,d=m.persistentData;
+          d.allTimeHighestLevel=1248;d.levelUnlocked=1249;m.startLevel(1249);
+          if(m.shepherd)throw Error('Shepherd unlocked early');
+          d.levelUnlocked=1250;d.realmSeals=3;m.startLevel(1250);
+          if(!m.shepherd?.body.parent)throw Error('Missing companion sprite');
+        }""")
+        page.wait_for_function("game().model.humans.aliveHumans.length >= 15")
+        assert page.evaluate("""()=>{const m=game().model,pet=m.shepherd;
+          const enemies=m.humans.aliveHumans.filter(u=>u.visible && !u.flags.dead);
+          for(const u of enemies.slice(0,5))m.humans.damageHuman(u,u.health);
+          if(pet.souls!==5)return false;
+          pet.cooldown=0;m.updateShepherd(0.001);
+          const shots=pet.shots.filter(s=>s.empowered);
+          if(shots.length!==5 || pet.souls!==0)return false;
+          const hp=shots.map(s=>s.target.health);
+          m.updateShepherd(10);
+          return shots.every((s,i)=>s.target.health<hp[i]);
+        }""")
         assert not errors, errors
         browser.close()
         print("Passed fresh start, Dark Realm victory, Soul Archive, file export/import and reload.")

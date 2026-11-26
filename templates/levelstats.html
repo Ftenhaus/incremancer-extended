@@ -1,5 +1,6 @@
 <div class="level-stats {{zm.model.persistentData.zoomButtons ? 'zoom' : ''}}" ng-if="zm.model.stats && zm.showStats">
   <p>Highest level cleared: {{zm.model.persistentData.allTimeHighestLevel || 0}} · Automatic shop and prestige ranks: {{zm.model.persistentData.automaticUpgradeRanks || 0}}</p>
+  <p ng-if="zm.model.shepherd">Soul Shepherd · {{zm.model.shepherd.souls}} / 5 souls. Five kills empower its next volley. Realm seals add targets, up to five.</p>
   <table>
     <tr>
       <td></td>

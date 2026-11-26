@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.2.0 — Soul Shepherd
+- A spectral companion joins at frontier 1250. It gathers souls from kills and fires homing volleys that scale with zombie damage, enemy health and realm seals. See Stats during combat for its current charge.
+
 ## 1.1.0 — campaign pacing
 - Necropolis buildings open at frontiers 150 and 200. Factory evolution requires frontier 200 and creature level 10.
 - Dark Realms at 500, 900 and 1250 have distinct combat rules. The combined trial starts at 2500 and grants a permanent capacity bonus on first clear.

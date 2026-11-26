@@ -57,3 +57,7 @@ Building access uses the highest frontier reached, including completed levels be
 Realm thresholds are 500 (half base zombie damage), 900 (double base summoning cost), 1250 (half base zombie health), then 2500 (both cost and health penalties). The first combined clear adds 10 permanent energy capacity. Further combined trials require 250 additional frontier levels each. Existing seals qualify for the same archive memories. Old seals do not skip the first combined trial.
 
 Browser fixtures compare effective base stats at each frontier against its ordinary stats and check the preceding level is locked. These deterministic scenarios measure mechanical difficulty, not real time to progress from a fresh save.
+
+## Soul Shepherd
+
+Reaching frontier 1250 permanently unlocks one spectral companion. It fires every four game seconds using twice current zombie damage. Five deaths empower the next volley with an extra 8% of each target's maximum health. The volley seeks two targets plus one per realm seal, capped at five. Charge belongs to the current battle. Damage cannot exceed remaining health when passed to the shared reward handler.

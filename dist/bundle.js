@@ -40,7 +40,7 @@ const REALM_RULES = [
 function progressionLevel(data) {
   return Math.max(data.levelUnlocked || 1, (data.allTimeHighestLevel || 0) + 1);
 }
-const FORK_VERSION = "v1.1.0";
+const FORK_VERSION = "v1.2.0";
 const FORK_VERSION_DATE = "2026-11-26";
 console.log("[Incremancer Extended] " + FORK_VERSION + " (" + FORK_VERSION_DATE + ")");
 var Incremancer;
@@ -1454,7 +1454,7 @@ var Incremancer;
       if (this.level !== 5 || this.currentState !== this.states.levelCompleted) {
         this._trophyOfferTimerSet = false;
       }
-      this.spells.updateSpells(e), e *= this.gameSpeed, this.hidden && U(e, this.app), this.partFactory.update(e), this.autoRemoveCollectorsHarpies(), this.addEnergy(this.getEnergyRate() * e), this.currentState == this.states.playingLevel && (this.addBones(this.bonesRate * e), this.addBrains(this.brainsRate * e), this.upgrades.updateRunicSyphon(this.runicSyphon), this.lastSave + 3e4 < t && (this.saveData(), this.lastSave = t), this.lastPlayFabSave + 12e5 < t && this.saveToPlayFab(), this.getHumanCount() <= 0 && (this.endLevelTimer < 0 ? (this.isBossStage(this.level) && this.trophies.doesLevelHaveTrophy(this.level) && this.trophies.trophyAquired(this.level), this.prestigePointsEarned = this.prestigePointsForLevel(this.level), this.currentState = this.states.levelCompleted, this.levelResourcesAdded = !1, this.calculateEndLevelBones(), this.calculateEndLevelZombieCages(), this.persistentData.levelsCompleted.includes(this.level) || (this.addPrestigePoints(this.prestigePointsForLevel(this.level)), this.persistentData.levelsCompleted.push(this.level)), this.persistentData.levelUnlocked = this.level + 1, (!this.persistentData.allTimeHighestLevel || this.level > this.persistentData.allTimeHighestLevel) && (this.persistentData.allTimeHighestLevel = this.level, window.kongregate && window.kongregate.stats.submit("level", this.persistentData.allTimeHighestLevel)), this.finishDarkRealm()) : this.endLevelTimer -= e), this.upgrades.updateConstruction(e), this.upgrades.updateAutoUpgrades(), this.creatureFactory.update(e), this.updateNetLauncher(e)), this.currentState == this.states.levelCompleted && (this.startTimer -= e);
+      this.spells.updateSpells(e), e *= this.gameSpeed, this.hidden && U(e, this.app), this.partFactory.update(e), this.autoRemoveCollectorsHarpies(), this.addEnergy(this.getEnergyRate() * e), this.currentState == this.states.playingLevel && (this.addBones(this.bonesRate * e), this.addBrains(this.brainsRate * e), this.upgrades.updateRunicSyphon(this.runicSyphon), this.lastSave + 3e4 < t && (this.saveData(), this.lastSave = t), this.lastPlayFabSave + 12e5 < t && this.saveToPlayFab(), this.getHumanCount() <= 0 && (this.endLevelTimer < 0 ? (this.isBossStage(this.level) && this.trophies.doesLevelHaveTrophy(this.level) && this.trophies.trophyAquired(this.level), this.prestigePointsEarned = this.prestigePointsForLevel(this.level), this.currentState = this.states.levelCompleted, this.levelResourcesAdded = !1, this.calculateEndLevelBones(), this.calculateEndLevelZombieCages(), this.persistentData.levelsCompleted.includes(this.level) || (this.addPrestigePoints(this.prestigePointsForLevel(this.level)), this.persistentData.levelsCompleted.push(this.level)), this.persistentData.levelUnlocked = this.level + 1, (!this.persistentData.allTimeHighestLevel || this.level > this.persistentData.allTimeHighestLevel) && (this.persistentData.allTimeHighestLevel = this.level, window.kongregate && window.kongregate.stats.submit("level", this.persistentData.allTimeHighestLevel)), this.finishDarkRealm()) : this.endLevelTimer -= e), this.upgrades.updateConstruction(e), this.upgrades.updateAutoUpgrades(), this.creatureFactory.update(e), this.updateNetLauncher(e), this.updateShepherd(e)), this.currentState == this.states.levelCompleted && (this.startTimer -= e);
       this.currentState == this.states.levelCompleted && this.startTimer < 0 && !(this.isMilestoneStage(this.level) && !this._milestoneHandled) && this.persistentData.autoStart && !this.bossRushMode && !this.trophyHuntMode && this.startLevel(this.level);
       this.currentState == this.states.levelCompleted && this.startTimer < 0 && !(this.isMilestoneStage(this.level) && !this._milestoneHandled) && this.bossRushMode && this.startLevel(Math.ceil((this.level + 1) / 50) * 50),
       this.currentState == this.states.levelCompleted && this.startTimer < 0 && !(this.isMilestoneStage(this.level) && !this._milestoneHandled) && this.trophyHuntMode && this.startLevel(this.level + 5 - this.level % 5),
@@ -1503,6 +1503,58 @@ var Incremancer;
         const e = this.getEnergyRate();
         this.persistentData.harpies > 0 && (this.persistentData.harpies -= Math.ceil(Math.abs(e)), this.persistentData.harpies < 0 && (this.persistentData.harpies = 0)), this.getEnergyRate() < 0 && this.persistentData.spiders > 0 && this.persistentData.spiders--, this.getEnergyRate() < 0 && this.persistentData.boneCollectors > 0 && this.persistentData.boneCollectors--
       }
+    }
+    resetShepherd() {
+      const old = this.shepherd;
+      if (old) old.body.destroy({children: true});
+      this.shepherd = null;
+      if (this.progressionLevel < 1250) return;
+      const body = new PIXI.Container();
+      const spirit = new PIXI.Graphics();
+      spirit.beginFill(0x183541).drawPolygon([-10, 6, -7, -12, 0, -20, 7, -12, 11, 8, 4, 5, 0, 11, -4, 5]).endFill();
+      spirit.beginFill(0xb1ffe6).drawCircle(-3, -10, 1.5).drawCircle(3, -10, 1.5).endFill();
+      spirit.lineStyle(2, 0x8aeac8).moveTo(9, 6).lineTo(11, -18).lineTo(17, -15);
+      const bolts = new PIXI.Graphics();
+      body.addChild(spirit, bolts);
+      g.addChild(body);
+      body.position.set(this.graveyard.sprite.x, this.graveyard.sprite.y);
+      this.shepherd = {body, bolts, souls: 0, cooldown: 1, clock: 0, shots: []};
+    }
+    updateShepherd(dt) {
+      const pet = this.shepherd;
+      if (!pet || this.currentState !== this.states.playingLevel) return;
+      pet.clock += dt;
+      const body = pet.body;
+      body.x = this.graveyard.sprite.x + 34 * Math.cos(pet.clock * 0.8);
+      body.y = this.graveyard.sprite.y - 22 + 8 * Math.sin(pet.clock * 1.6);
+      body.zIndex = body.y + 32;
+      pet.cooldown -= dt;
+      if (pet.cooldown <= 0) {
+        pet.cooldown = 4;
+        const empowered = pet.souls >= 5;
+        const limit = empowered ? Math.min(5, 2 + (this.persistentData.realmSeals || 0)) : 1;
+        const nearby = this.humans.aliveHumans.filter(unit => !unit.flags.dead && unit.visible)
+          .sort((a, b) => Math.hypot(a.x - body.x, a.y - body.y) - Math.hypot(b.x - body.x, b.y - body.y)).slice(0, limit);
+        if (empowered && nearby.length) pet.souls = 0;
+        for (const target of nearby) pet.shots.push({x: body.x, y: body.y, target, empowered});
+      }
+      pet.bolts.clear();
+      pet.shots = pet.shots.filter(shot => {
+        const target = shot.target;
+        if (target.flags.dead || !target.visible) return false;
+        const dx = target.x - shot.x, dy = target.y - shot.y;
+        const distance = Math.hypot(dx, dy);
+        const step = 300 * dt;
+        if (distance <= step) {
+          const damage = this.zombieDamage * 2 + (shot.empowered ? target.maxHealth * 0.08 : 0);
+          this.humans.damageHuman(target, Math.min(target.health, damage));
+          return false;
+        }
+        shot.x += dx * step / distance;
+        shot.y += dy * step / distance;
+        pet.bolts.beginFill(shot.empowered ? 0xe1b4ff : 0x7fffd4).drawCircle(shot.x - body.x, shot.y - body.y, shot.empowered ? 5 : 3).endFill();
+        return true;
+      });
     }
     updateNetLauncher(e) {
       if (!this.netLaunchers || this.currentState != this.states.playingLevel) return;
@@ -1629,6 +1681,7 @@ var Incremancer;
     setupLevel() {
       if (this.persistentData.realmTrial !== this.level) delete this.persistentData.realmTrial;
       this.endLevelTimer = this.endLevelDelay, N(), this.particles.initialize(), this.humans.populate(), this.zombies.populate(), this.graveyard.initialize(), setTimeout(Z, 10), this.upgrades.applyUpgrades(), this.upgrades.updateRuneEffects(), this.partFactory.applyGenerators(), this.creatures.populate(), this.skeleton.populate(), function(){const spells = new SpellSystem; spells.spells.forEach(s => { if (s.active) { s.end(); spells.applySpellBuffEnd(s, this); s.start(); spells.applySpellBuffStart(s, this); } })}.call(this), this.addStartLevelResources(), this.populateStats(), SpiderCollector.instance && (SpiderCollector.instance.spiderTotalBones = 0, SpiderCollector.instance.spiderTotalParts = 0), this.chatLog.forEach(function(m) { m.count = 1 })
+      this.resetShepherd();
     }
     populateStats() {
       this.stats = {
@@ -3241,7 +3294,7 @@ var Incremancer;
       return this.minSecondsTostand + Math.random() * (this.maxSecondsToStand - this.minSecondsTostand)
     }
     damageHuman(e, t) {
-      this.gameModel.addBlood(Math.round(t / 3)), e.health -= t, e.timer.scan = 0, e.flags.tank ? this.fragments.newPart(e.x, e.y - 18, 8086798) : (this.blood.newSplatter(e.x, e.y), e.speedMod = Math.max(Math.min(1, e.health / e.maxHealth), .25)), e.health <= 0 && !e.flags.dead && (this.bones.newBones(e.x, e.y), PartsPiles.instance && PartsPiles.instance.newPartsDrop(e.x, e.y, e.maxHealth), e.flags.dead = !0, this.gameModel.addBrains(1), this.skeleton.addXp(this.gameModel.level), this.skeleton.testForLoot(), e.flags.tank ? (this.blasts.newDroneBlast(e.x, e.y - 5), this.fragments.newFragmentExplosion(e.x, e.y - 5, 8086798), e.visible = !1) : e.textures = e.deadTexture, e.flags.vip && (this.vipText.visible = !1, this.trophies.trophyAquired(this.gameModel.level), setTimeout((() => {
+      this.gameModel.addBlood(Math.round(t / 3)), e.health -= t, e.timer.scan = 0, e.flags.tank ? this.fragments.newPart(e.x, e.y - 18, 8086798) : (this.blood.newSplatter(e.x, e.y), e.speedMod = Math.max(Math.min(1, e.health / e.maxHealth), .25)), e.health <= 0 && !e.flags.dead && (this.bones.newBones(e.x, e.y), PartsPiles.instance && PartsPiles.instance.newPartsDrop(e.x, e.y, e.maxHealth), e.flags.dead = !0, this.gameModel.shepherd && (this.gameModel.shepherd.souls = Math.min(5, this.gameModel.shepherd.souls + 1)), this.gameModel.addBrains(1), this.skeleton.addXp(this.gameModel.level), this.skeleton.testForLoot(), e.flags.tank ? (this.blasts.newDroneBlast(e.x, e.y - 5), this.fragments.newFragmentExplosion(e.x, e.y - 5, 8086798), e.visible = !1) : e.textures = e.deadTexture, e.flags.vip && (this.vipText.visible = !1, this.trophies.trophyAquired(this.gameModel.level), setTimeout((() => {
         this.vipEscaping = !1
       }), 2e3), this.gameModel.trophyHuntMode && setTimeout((() => {
         this.gameModel.startLevel(this.gameModel.level + 5 - this.gameModel.level % 5)
