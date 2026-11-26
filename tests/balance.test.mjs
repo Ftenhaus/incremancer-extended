@@ -1,18 +1,7 @@
-import {readFileSync} from 'node:fs';
+import {extract, source} from '../tools/balance-runtime.mjs';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
-const source=readFileSync(new URL('../dist/bundle.js',import.meta.url),'utf8');
-// Extract only pure arithmetic methods from the trusted local bundle.
-function extract(signature,args){
- const start=source.indexOf(signature);
- assert.ok(start>=0,'Missing formula: '+signature);
- const open=source.indexOf('{',start);
- let depth=1,end=open+1;
- while(depth && end<source.length){if(source[end]==='{')depth++;if(source[end]==='}')depth--;end++;}
- assert.equal(depth,0);
- return vm.runInNewContext(source.slice(0,source.indexOf('const FORK_VERSION'))+'\n(function('+args+'){'+source.slice(open+1,end-1)+'})');
-}
 const hp=extract('getMaxHealth(e) {','e');
 const prestige=extract('calculateWithPrestigeRankBonus(e, t) {','e,t');
 const bulk=extract('function l(e, t, s, i) {','e,t,s,i');
@@ -45,7 +34,7 @@ test('Extended storage names are unique and legacy keys are not assigned',()=>{c
 test('upstream cloud login disabled',()=>assert.ok(source.includes('if (false && window.kongregate) try {')));
 
 test('enemy late curve monotonic',()=>{for(let n=85;n<=10000;n++)assert.ok(hp(n)>=hp(n-1),'level '+n);});
-test('rounded bulk quote matches individual prices and budget',()=>{const q=extract('function extendedBulkQuote(base, growth, rank, ascension, budget, limit) {','base,growth,rank,ascension,budget,limit');for(const a of [0,1,5,20]){const total=Array.from({length:10},(_,i)=>Math.round(10*1.225**(5+i)*.5**a)).reduce((x,y)=>x+y,0);assert.equal(q(10,1.225,5,a,total,10).total,total);assert.equal(q(10,1.225,5,a,total,10).count,10);}assert.equal(q(10,1,0,100,0,Infinity).count,1000);});
+test('rounded bulk quote matches individual prices and budget',()=>{const q=extract('function extendedBulkQuote(base, growth, rank, ascension, budget, limit) {','base,growth,rank,ascension,budget,limit');for(const a of [0,1,5,20]){const total=Array.from({length:10},(_,i)=>Math.max(1,Math.round(10*1.225**(5+i)*.5**a))).reduce((x,y)=>x+y,0);assert.equal(q(10,1.225,5,a,total,10).total,total);assert.equal(q(10,1.225,5,a,total,10).count,10);}assert.equal(q(10,1,0,100,0,Infinity).count,0);assert.equal(q(10,1,0,100,3,Infinity).count,3);assert.equal(q(0,1,0,100,0,Infinity).count,1000);});
 
 test('ascension discount offsets overflow in single and bulk rank prices', () => {
   const upgrade = extract('upgradePrice(e) {', 'e');

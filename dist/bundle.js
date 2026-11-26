@@ -3,14 +3,16 @@ const EXTENDED_STORAGE = Object.freeze({ game: "incremancer-extended:game", skel
 // Limit each bulk action to avoid unbounded synchronous loops (including free ranks).
 const EXTENDED_BULK_LIMIT = 1000;
 function extendedRankPrice(base, growth, rank, ascension) {
+  if (base === 0) return 0;
+  const minimum = base > 0 ? 1 : -Infinity;
   const factor = EXTENDED_BALANCE.ascension.priceFactor;
   const undiscounted = base * Math.pow(growth, rank);
   const discount = Math.pow(factor, ascension || 0);
   if (base > 0 && growth > 0 && (!Number.isFinite(undiscounted) || discount === 0)) {
     const exponent = Math.log2(base) + rank * Math.log2(growth) + (ascension || 0) * Math.log2(factor);
-    return Math.round(2 ** exponent);
+    return Math.max(minimum, Math.round(2 ** exponent));
   }
-  return Math.round(undiscounted * discount);
+  return Math.max(minimum, Math.round(undiscounted * discount));
 }
 function extendedBulkQuote(base, growth, rank, ascension, budget, limit) {
   let count = 0, total = 0;
@@ -22,7 +24,7 @@ function extendedBulkQuote(base, growth, rank, ascension, budget, limit) {
   }
   return {count, total};
 }
-const FORK_VERSION = "v0.2.0-dev";
+const FORK_VERSION = "v0.3.0-dev";
 const FORK_VERSION_DATE = "2026-11-26";
 console.log("[Incremancer Extended] " + FORK_VERSION + " (" + FORK_VERSION_DATE + ")");
 var Incremancer;
