@@ -11,7 +11,7 @@ function extract(signature,args){
  let depth=1,end=open+1;
  while(depth && end<source.length){if(source[end]==='{')depth++;if(source[end]==='}')depth--;end++;}
  assert.equal(depth,0);
- return vm.runInNewContext('(function('+args+'){'+source.slice(open+1,end-1)+'})');
+ return vm.runInNewContext(source.slice(0,source.indexOf('const FORK_VERSION'))+'\n(function('+args+'){'+source.slice(open+1,end-1)+'})');
 }
 const hp=extract('getMaxHealth(e) {','e');
 const prestige=extract('calculateWithPrestigeRankBonus(e, t) {','e,t');

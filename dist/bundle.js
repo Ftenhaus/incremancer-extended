@@ -1,3 +1,5 @@
+const EXTENDED_BALANCE = Object.freeze({ prestige: Object.freeze({ costGrowth: 1.225, resourceEffect: 0.2, bonusStart: 60, bonusGrowth: 0.05 }), ascension: Object.freeze({ priceFactor: 0.5, speedFactor: 2 }), skeleton: Object.freeze({ xpBase: 800, xpExponent: 1.9 }), enemy: Object.freeze({ growth85: 1.015, growth499: 1.03, growth999: 1.021, growth1499: 1.025, growth2300: 1.025 }) });
+const EXTENDED_STORAGE = Object.freeze({ game: "incremancer-extended:game", skeleton: "incremancer-extended:skeleton", talents: "incremancer-extended:talents" });
 const FORK_VERSION = "v1.1.0";
 const FORK_VERSION_DATE = "2026-02-16";
 console.log("[Incremancer fork] " + FORK_VERSION + " (" + FORK_VERSION_DATE + ")");
@@ -155,7 +157,7 @@ var Incremancer;
       let s = !1;
       const i = c;
       t.w && (i.y += t.scrollSpeed * e, s = !0), t.a && (i.x += t.scrollSpeed * e, s = !0), t.s && (i.y -= t.scrollSpeed * e, s = !0), t.d && (i.x -= t.scrollSpeed * e, s = !0), s && F(i)
-    }(e), G.update(), e *= v.gameSpeed * Math.pow(2, v.persistentData.ascensionLevel || 0), M.update(e), C.update(e), T.update(e), k.update(e), w.update(e), S.update(e),
+    }(e), G.update(), e *= v.gameSpeed * Math.pow(EXTENDED_BALANCE.ascension.speedFactor, v.persistentData.ascensionLevel || 0), M.update(e), C.update(e), T.update(e), k.update(e), w.update(e), S.update(e),
       function(e, t) {
         if (C.vipEscaping && void 0 !== C.vip ? y.alpha += e : (y.alpha -= e, y.alpha < 0 && (y.alpha = 0)), y.alpha > 0) {
           y.alpha > 1 && (y.alpha = 1), y.visible = !0, y.x = 5, y.y = D.y - 305;
@@ -878,7 +880,7 @@ var Incremancer;
       return 0
     }
     purchasePrice(e) {
-      return Math.round(e.basePrice * Math.pow(e.multi, this.currentRank(e)) * Math.pow(0.5, this.gameModel.persistentData.ascensionLevel || 0))
+      return Math.round(e.basePrice * Math.pow(e.multi, this.currentRank(e)) * Math.pow(EXTENDED_BALANCE.ascension.priceFactor, this.gameModel.persistentData.ascensionLevel || 0))
     }
     upgradeMaxAffordable(e) {
       const t = this.currentRank(e);
@@ -968,10 +970,10 @@ var Incremancer;
       this.gameModel.persistentData.parts += e.price * t
     }
     purchasePrice(e) {
-      return e.baseCost * Math.pow(this.creatureCostScaling, e.level - 1) * this.creatureCostReduction * Math.pow(0.5, this.gameModel.persistentData.ascensionLevel || 0)
+      return e.baseCost * Math.pow(this.creatureCostScaling, e.level - 1) * this.creatureCostReduction * Math.pow(EXTENDED_BALANCE.ascension.priceFactor, this.gameModel.persistentData.ascensionLevel || 0)
     }
     levelPrice(e) {
-      return e.baseCost * Math.pow(this.creatureCostScaling, e.level) * 5 * this.creatureCostReduction * Math.pow(0.5, this.gameModel.persistentData.ascensionLevel || 0)
+      return e.baseCost * Math.pow(this.creatureCostScaling, e.level) * 5 * this.creatureCostReduction * Math.pow(EXTENDED_BALANCE.ascension.priceFactor, this.gameModel.persistentData.ascensionLevel || 0)
     }
     levelCreature(e) {
       this.levelPrice(e) < this.gameModel.persistentData.parts && (this.gameModel.persistentData.parts -= this.levelPrice(e), e.level++, this.gameModel.persistentData.creatureLevels[e.id] = e.level)
@@ -1043,7 +1045,7 @@ var Incremancer;
     constructor() {
       this.forkVersion = FORK_VERSION,
         this.forkVersionDate = FORK_VERSION_DATE,
-        this.storageName = "ZombieData",
+        this.storageName = EXTENDED_STORAGE.game,
         this.kongregate = null,
         this.playFabId = null,
         this.titleId = "772D8",
@@ -1767,7 +1769,7 @@ var Incremancer;
       }
     }
     loginInUsingPlayFab() {
-      if (window.kongregate) try {
+      if (false && window.kongregate) try {
         PlayFab.settings.titleId = this.titleId;
         const e = {
             TitleId: PlayFab.settings.titleId,
@@ -2203,12 +2205,12 @@ var Incremancer;
         this.prestigeUpgrades = [new UpgradeDef(108, "A Small Investment", this.types.startingPC, this.costs.prestigePoints, 10, 1.25, 1, 0, "Each rank gives you an additional 500 blood, 50 brains, and 200 bones when starting a new level.", null, null),
           new UpgradeDef(109, "Time Warp", this.types.unlockSpell, this.costs.prestigePoints, 50, 1, 1, 1, "Unlock the Time Warp spell in order to speed up the flow of time.", null, null),
           new UpgradeDef(110, "Master of Death", this.types.energyCost, this.costs.prestigePoints, 1e3, 1, 1, 8, "Each rank reduces the energy cost of summoning a zombie by 1", null, null),
-          new UpgradeDef(101, "Blood Storage", this.types.bloodStoragePC, this.costs.prestigePoints, 10, 1.225, .2, 0, "Additional 20% blood storage for each rank.", null, null),
-          new UpgradeDef(102, "Blood Rate", this.types.bloodGainPC, this.costs.prestigePoints, 10, 1.225, .2, 0, "Additional 20% blood income rate for each rank.", null, null),
-          new UpgradeDef(103, "Brain Storage", this.types.brainsStoragePC, this.costs.prestigePoints, 10, 1.225, .2, 0, "Additional 20% brain storage for each rank.", null, null),
-          new UpgradeDef(104, "Brain Rate", this.types.brainsGainPC, this.costs.prestigePoints, 10, 1.225, .2, 0, "Additional 20% brain income rate for each rank.", null, null),
-          new UpgradeDef(105, "Bone Rate", this.types.bonesGainPC, this.costs.prestigePoints, 10, 1.225, .2, 0, "Additional 20% bones income rate for each rank.", null, null),
-          new UpgradeDef(111, "Parts Rate", this.types.partsGainPC, this.costs.prestigePoints, 10, 1.225, .2, 0, "Additional 20% creature parts income rate for each rank.", null, null),
+          new UpgradeDef(101, "Blood Storage", this.types.bloodStoragePC, this.costs.prestigePoints, 10, EXTENDED_BALANCE.prestige.costGrowth, EXTENDED_BALANCE.prestige.resourceEffect, 0, "Additional 20% blood storage for each rank.", null, null),
+          new UpgradeDef(102, "Blood Rate", this.types.bloodGainPC, this.costs.prestigePoints, 10, EXTENDED_BALANCE.prestige.costGrowth, EXTENDED_BALANCE.prestige.resourceEffect, 0, "Additional 20% blood income rate for each rank.", null, null),
+          new UpgradeDef(103, "Brain Storage", this.types.brainsStoragePC, this.costs.prestigePoints, 10, EXTENDED_BALANCE.prestige.costGrowth, EXTENDED_BALANCE.prestige.resourceEffect, 0, "Additional 20% brain storage for each rank.", null, null),
+          new UpgradeDef(104, "Brain Rate", this.types.brainsGainPC, this.costs.prestigePoints, 10, EXTENDED_BALANCE.prestige.costGrowth, EXTENDED_BALANCE.prestige.resourceEffect, 0, "Additional 20% brain income rate for each rank.", null, null),
+          new UpgradeDef(105, "Bone Rate", this.types.bonesGainPC, this.costs.prestigePoints, 10, EXTENDED_BALANCE.prestige.costGrowth, EXTENDED_BALANCE.prestige.resourceEffect, 0, "Additional 20% bones income rate for each rank.", null, null),
+          new UpgradeDef(111, "Parts Rate", this.types.partsGainPC, this.costs.prestigePoints, 10, EXTENDED_BALANCE.prestige.costGrowth, EXTENDED_BALANCE.prestige.resourceEffect, 0, "Additional 20% creature parts income rate for each rank.", null, null),
           new UpgradeDef(112, "Auto Construction", this.types.autoconstruction, this.costs.prestigePoints, 250, 1, 1, 1, "Unlock the ability to automatically start construction of the cheapest available building option.", null, null),
           new UpgradeDef(114, "Auto Shop", this.types.autoshop, this.costs.prestigePoints, 250, 1, 1, 1, "Unlock the ability to automatically purchase items from the shop.", null, null),
           new UpgradeDef(113, "Graveyard Health", this.types.graveyardHealth, this.costs.prestigePoints, 10, 1.225, .1, 0, "Additional 10% graveyard health during boss levels with each rank.", null, null),
@@ -2439,14 +2441,14 @@ var Incremancer;
       }
     }
     calculateWithPrestigeRankBonus(e, t) {
-      if (t <= 60) {
+      if (t <= EXTENDED_BALANCE.prestige.bonusStart) {
         return Math.pow(1 + e.effect, t);
       }
 
-      let multiplier = Math.pow(1 + e.effect, 60);
+      let multiplier = Math.pow(1 + e.effect, EXTENDED_BALANCE.prestige.bonusStart);
 
-      for (let i = 1; i <= t - 60; i++) {
-        multiplier *= 1 + e.effect * Math.pow(1 + 0.05, i);
+      for (let i = 1; i <= t - EXTENDED_BALANCE.prestige.bonusStart; i++) {
+        multiplier *= 1 + e.effect * Math.pow(1 + EXTENDED_BALANCE.prestige.bonusGrowth, i);
       }
 
       return multiplier;
@@ -2686,7 +2688,7 @@ var Incremancer;
       return 0
     }
     upgradePrice(e) {
-      return Math.round(e.basePrice * Math.pow(e.multiplier, this.currentRank(e)) * Math.pow(0.5, this.gameModel.persistentData.ascensionLevel || 0))
+      return Math.round(e.basePrice * Math.pow(e.multiplier, this.currentRank(e)) * Math.pow(EXTENDED_BALANCE.ascension.priceFactor, this.gameModel.persistentData.ascensionLevel || 0))
     }
     upgradeMaxAffordable(e) {
       const t = this.currentRank(e);
@@ -3150,11 +3152,11 @@ var Incremancer;
         e < 49 ? 100 * (e - 19) :
         e < 64 ? 300 * (e - 39) :
         e < 85 ? 500 * (e - 49) :
-        e < 499 ? 17800 * Math.pow(1.015, e - 84) :
-        e < 999 ? 85e5 * Math.pow(1.03, e - 499) :
-        e < 1499 ? 498e16 * Math.pow(1.021, e - 1499) :
-        e > 2299 ? 845e23 * Math.pow(1.025, e - 2299) :
-        22e12 * Math.pow(1.025, e - 999)
+        e < 499 ? 17800 * Math.pow(EXTENDED_BALANCE.enemy.growth85, e - 84) :
+        e < 999 ? 85e5 * Math.pow(EXTENDED_BALANCE.enemy.growth499, e - 499) :
+        e < 1499 ? 498e16 * Math.pow(EXTENDED_BALANCE.enemy.growth999, e - 1499) :
+        e > 2299 ? 845e23 * Math.pow(EXTENDED_BALANCE.enemy.growth2300, e - 2299) :
+        22e12 * Math.pow(EXTENDED_BALANCE.enemy.growth1499, e - 999)
     }
     getAttackDamage() {
       1 != this.gameModel.level ? 2 != this.gameModel.level ? 3 != this.gameModel.level ? this.attackDamage = Math.round(this.getMaxHealth(this.gameModel.level) / 10) : this.attackDamage = 5 : this.attackDamage = 4 : this.attackDamage = 2
@@ -4028,7 +4030,7 @@ var Incremancer;
           right: 3,
           left: 4,
           dead: 5
-        }, this.burnTickTimer = 5, this.smokeTimer = .3, this.fastDistance = i, this.magnitude = t, this.damageZombie = null, this.searchClosestTarget = null, this.updateBurns = null, this.updateZombieRegen = null, this.causePlagueExplosion = null, this.inflictPlague = null, this.healZombie = null, this.setSpeedMultiplier = null, this.storageName = "incremancerskele", this.talentsStorageName = "incremancertalents", this.persistent = {
+        }, this.burnTickTimer = 5, this.smokeTimer = .3, this.fastDistance = i, this.magnitude = t, this.damageZombie = null, this.searchClosestTarget = null, this.updateBurns = null, this.updateZombieRegen = null, this.causePlagueExplosion = null, this.inflictPlague = null, this.healZombie = null, this.setSpeedMultiplier = null, this.storageName = EXTENDED_STORAGE.skeleton, this.talentsStorageName = EXTENDED_STORAGE.talents, this.persistent = {
           xpRate: 0,
           skeletons: 0,
           level: 1,
@@ -4127,7 +4129,7 @@ var Incremancer;
       return this.talentPoints - this.getUsedPoints()
     }
     xpForNextLevel() {
-      return 800 * Math.pow(this.persistent.level, 1.9)
+      return EXTENDED_BALANCE.skeleton.xpBase * Math.pow(this.persistent.level, EXTENDED_BALANCE.skeleton.xpExponent)
     }
     addXp(e) {
       if (this.isAlive() && (this.persistent.xp += e * this.persistent.xpRate, this.persistent.xp > this.xpForNextLevel())) {
