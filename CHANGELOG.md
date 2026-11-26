@@ -1,4 +1,6 @@
 # Changelog
+## 0.4.0 — shop automation and progression statistics
+- Pause and resume automatic shop and prestige purchases from Options after unlocking automation. Stats shows the highest cleared level and counts automatic ranks purchased since this update.
 
 ## 0.3.0 — economy development build
 - Discounted generator and upgrade ranks with a positive base price cost at least one unit.

@@ -4,6 +4,10 @@
     <button ng-click="zm.closeSidePanels();">Close</button>
   </div>
   <div class="upgrades">
+      <div class="upgrade" ng-if="zm.model.autoUpgrades">
+          <h4>Shop and prestige auto-purchases</h4>
+          <button ng-click="zm.model.persistentData.pauseShopAutomation = !zm.model.persistentData.pauseShopAutomation; zm.model.saveData()">{{zm.model.persistentData.pauseShopAutomation ? "Resume purchases" : "Pause purchases"}}</button>
+      </div>
       <div class="upgrade">
           <h4>How to play</h4>
           <ul>

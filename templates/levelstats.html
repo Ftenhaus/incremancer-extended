@@ -1,4 +1,5 @@
 <div class="level-stats {{zm.model.persistentData.zoomButtons ? 'zoom' : ''}}" ng-if="zm.model.stats && zm.showStats">
+  <p>Highest level cleared: {{zm.model.persistentData.allTimeHighestLevel || 0}} · Automatic shop and prestige ranks: {{zm.model.persistentData.automaticUpgradeRanks || 0}}</p>
   <table>
     <tr>
       <td></td>

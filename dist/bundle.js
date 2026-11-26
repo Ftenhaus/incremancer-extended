@@ -24,7 +24,7 @@ function extendedBulkQuote(base, growth, rank, ascension, budget, limit) {
   }
   return {count, total};
 }
-const FORK_VERSION = "v0.3.0-dev";
+const FORK_VERSION = "v0.4.0-dev";
 const FORK_VERSION_DATE = "2026-11-26";
 console.log("[Incremancer Extended] " + FORK_VERSION + " (" + FORK_VERSION_DATE + ")");
 var Incremancer;
@@ -2815,8 +2815,10 @@ var Incremancer;
           };
           i && (t.costType = this.costs.prestigePoints), this.gameModel.persistentData.upgrades.push(t)
         }
-        t && this.gameModel.saveData(), this.applyUpgrades(), e.purchaseMessage && this.gameModel.sendMessage(e.purchaseMessage, "chat-upgrade")
+        t && this.gameModel.saveData(), this.applyUpgrades(), e.purchaseMessage && this.gameModel.sendMessage(e.purchaseMessage, "chat-upgrade");
+        return true;
       }
+      return false;
     }
     removeUpgrade(e) {
       for (let t = 0; t < this.gameModel.persistentData.upgrades.length; t++)
@@ -2856,10 +2858,19 @@ var Incremancer;
         }
       }
     }
+    buySelectedUpgrades(upgrades) {
+      const data = this.gameModel.persistentData;
+      if (data.pauseShopAutomation) return;
+      for (const upgrade of upgrades) {
+        if (upgrade.auto && this.purchaseUpgrade(upgrade, false)) {
+          data.automaticUpgradeRanks = (data.automaticUpgradeRanks || 0) + 1;
+        }
+      }
+    }
     updateAutoUpgrades() {
       if (this.gameModel.autoUpgrades) {
-        for (let e = 0; e < this.upgrades.length; e++) this.upgrades[e].auto && this.hasRequirement(this.upgrades[e]) && this.purchaseUpgrade(this.upgrades[e], !1);
-        for (let e = 0; e < this.prestigeUpgrades.length; e++) this.prestigeUpgrades[e].auto && this.hasRequirement(this.prestigeUpgrades[e]) && this.purchaseUpgrade(this.prestigeUpgrades[e], !1);
+        this.buySelectedUpgrades(this.upgrades);
+        this.buySelectedUpgrades(this.prestigeUpgrades);
         if (this.gameModel.constructions.factory)
           for (let e = 0; e < this.partFactory.generators.length; e++) this.partFactory.generators[e].auto && this.partFactory.purchaseGenerator(this.partFactory.generators[e], !1);
         if (this.gameModel.constructions.monsterFactory) {

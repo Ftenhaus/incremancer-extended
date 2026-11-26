@@ -48,3 +48,25 @@ test('ascension discount offsets overflow in single and bulk rank prices', () =>
     assert.equal(result.total, 30);
   }
 });
+
+test('shop automation preserves selections on pause and counts only successful purchases', () => {
+  const buy = extract('buySelectedUpgrades(upgrades) {', 'upgrades');
+  const data = {};
+  const attempts = [];
+  const context = {
+    gameModel: {persistentData: data},
+    purchaseUpgrade(upgrade, save) {
+      assert.equal(save, false);
+      attempts.push(upgrade.id);
+      return upgrade.id === 2;
+    }
+  };
+  const upgrades = [{id: 1, auto: false}, {id: 2, auto: true}, {id: 3, auto: true}];
+  buy.call(context, upgrades);
+  data.pauseShopAutomation = true;
+  buy.call(context, upgrades);
+  data.pauseShopAutomation = false;
+  buy.call(context, upgrades);
+  assert.deepEqual(attempts, [2, 3, 2, 3]);
+  assert.equal(data.automaticUpgradeRanks, 2);
+});
