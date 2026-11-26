@@ -1,4 +1,8 @@
 # Changelog
+
+## 0.9.0 — Soul Archive
+- Realm seals unlock three persistent memories. Attune one from Level Select for an energy, storage or combat bonus.
+
 ## 0.8.0 — Dark Realms
 - Challenge the current frontier from Level Select starting at level 50. Each clear awards one permanent seal and 25 spendable prestige points.
 ## 0.7.0 — factory unit evolution

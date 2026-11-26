@@ -7,6 +7,13 @@
     <p ng-if="zm.model.persistentData.realmTrial">Trial active on level {{zm.model.persistentData.realmTrial}}.</p>
     <button ng-disabled="zm.model.persistentData.realmTrial || zm.model.level != zm.model.persistentData.levelUnlocked || zm.model.level < zm.model.nextRealmLevel" ng-click="zm.model.enterDarkRealm(); zm.levelSelect.shown = false">Enter trial at frontier level {{zm.model.nextRealmLevel}} or higher</button>
   </section>
+  <section ng-if="zm.model.persistentData.realmSeals">
+    <h3>Soul Archive</h3>
+    <p>Attune one memory. Switching is free. Switching away from a storage bonus trims resources to the new capacity.</p>
+    <div ng-repeat="memory in zm.model.soulMemories track by memory.id">
+      <button ng-click="zm.model.attuneMemory(memory.id)" ng-disabled="zm.model.persistentData.realmSeals < memory.seals || zm.model.persistentData.soulMemory == memory.id">{{zm.model.persistentData.soulMemory == memory.id ? 'Attuned' : memory.seals + ' seal(s)'}} · {{memory.name}} · {{memory.bonus}}</button>
+    </div>
+  </section>
   <div class="ranges">
     <button ng-repeat="range in zm.levelSelect.levelRanges" ng-click="zm.levelSelect.selectRange(range)" class="{{zm.levelSelect.start == range ? 'active' : ''}}">Levels {{range}} to {{range + zm.levelSelect.levelsPerPage - 1}}</button>
   </div>

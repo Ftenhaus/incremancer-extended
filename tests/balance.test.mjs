@@ -149,3 +149,17 @@ test('dark realm requires the frontier, persists entry and rewards each clear on
   assert.equal(data.realmTrial, undefined);
   assert.equal(saves, 2);
 });
+
+test('soul archive honors existing seals and only persists eligible changes', () => {
+  const attune = extract('attuneMemory(id) {', 'id');
+  const data = {realmSeals: 2, brains: 90};
+  let saves = 0;
+  const model = {persistentData: data, energy: 15, energyMax: 10, brainsMax: 50,
+    upgrades: {applyUpgrades() {}}, saveData() { saves++; }};
+  for (const id of ['unknown', 'hunter', 'scholar', 'scholar', 'spark']) attune.call(model, id);
+  assert.equal(data.soulMemory, 'spark');
+  assert.equal(data.realmSeals, 2);
+  assert.equal(model.energy, 10);
+  assert.equal(data.brains, 50);
+  assert.equal(saves, 2);
+});

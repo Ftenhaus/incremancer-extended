@@ -28,7 +28,12 @@ const NECROPOLIS_BUILDINGS = Object.freeze([
   {id: "ossuary", name: "Ossuary", cost: 50, effect: "+2 base zombie health"},
   {id: "spiritWell", name: "Spirit Well", cost: 100, effect: "+1 base energy per second"}
 ]);
-const FORK_VERSION = "v0.8.0-dev";
+const SOUL_MEMORIES = Object.freeze([
+  {id: "spark", name: "First Spark", seals: 1, bonus: "+5 energy capacity"},
+  {id: "scholar", name: "Lost Scholar", seals: 2, bonus: "+50 base brain storage"},
+  {id: "hunter", name: "Last Hunter", seals: 3, bonus: "+1 base zombie damage"}
+]);
+const FORK_VERSION = "v0.9.0-dev";
 const FORK_VERSION_DATE = "2026-11-26";
 console.log("[Incremancer Extended] " + FORK_VERSION + " (" + FORK_VERSION_DATE + ")");
 var Incremancer;
@@ -1283,14 +1288,16 @@ var Incremancer;
       this.saveData();
     }
     resetToBaseStats() {
+      const data = this.persistentData;
+      const memory = SOUL_MEMORIES.find(entry => entry.id === data.soulMemory && data.realmSeals >= entry.seals)?.id;
       this.energyRate = this.baseStats.energyRate + (this.persistentData.necropolis?.spiritWell ? 1 : 0),
         this.brainsRate = this.baseStats.brainsRate,
         this.bonesRate = this.baseStats.bonesRate,
-        this.energyMax = this.baseStats.energyMax,
+        this.energyMax = this.baseStats.energyMax + (memory === "spark" ? 5 : 0),
         this.bloodMax = this.baseStats.bloodMax,
-        this.brainsMax = this.baseStats.brainsMax,
+        this.brainsMax = this.baseStats.brainsMax + (memory === "scholar" ? 50 : 0),
         this.zombieHealth = this.baseStats.zombieHealth + (this.persistentData.necropolis?.ossuary ? 2 : 0),
-        this.zombieDamage = this.baseStats.zombieDamage * (this.persistentData.realmTrial === this.level ? 0.5 : 1),
+        this.zombieDamage = (this.baseStats.zombieDamage + (memory === "hunter" ? 1 : 0)) * (this.persistentData.realmTrial === this.level ? 0.5 : 1),
         this.zombieSpeed = this.baseStats.zombieSpeed,
         this.zombieCost = this.baseStats.zombieCost,
         this.zombieCages = 0,
@@ -1558,6 +1565,19 @@ var Incremancer;
     }
     setMaxHarpies() {
       this.persistentData.harpies = this.computeMaxHarpies();
+    }
+    get soulMemories() {
+      return SOUL_MEMORIES;
+    }
+    attuneMemory(id) {
+      const data = this.persistentData;
+      const memory = SOUL_MEMORIES.find(entry => entry.id === id);
+      if (!memory || !(data.realmSeals >= memory.seals) || data.soulMemory === id) return;
+      data.soulMemory = id;
+      this.upgrades.applyUpgrades();
+      this.energy = Math.min(this.energy, this.energyMax);
+      data.brains = Math.min(data.brains, this.brainsMax);
+      this.saveData();
     }
     get nextRealmLevel() {
       return 50 + 25 * (this.persistentData.realmSeals || 0);

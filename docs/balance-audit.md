@@ -45,3 +45,7 @@ At level 10, the Earth and Water golems evolve into Guardians (+50% health), whi
 ## Dark Realms
 
 A trial restarts the current frontier level with half base zombie damage. The first trial requires frontier level 50. Each seal raises the next threshold by 25 levels and grants 25 spendable prestige points. A clear consumes the active trial before saving. A different level, prestige or ascension ends the trial. Earned seals persist.
+
+## Soul Archive
+
+Lifetime seals unlock three memories at one, two and three seals. One memory can be active at a time. Their flat base bonuses are +5 energy capacity, +50 brain storage or +1 zombie damage before the Dark Realm penalty. Switching is free. Existing seal counts qualify immediately. Only the selected memory ID is stored.
