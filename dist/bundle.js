@@ -1,8 +1,8 @@
 const EXTENDED_BALANCE = Object.freeze({ prestige: Object.freeze({ costGrowth: 1.225, resourceEffect: 0.2, bonusStart: 60, bonusGrowth: 0.05 }), ascension: Object.freeze({ priceFactor: 0.5, speedFactor: 2 }), skeleton: Object.freeze({ xpBase: 800, xpExponent: 1.9 }), enemy: Object.freeze({ growth85: 1.015, growth499: 1.03, growth999: 1.021, growth1499: 1.025, growth2300: 1.025 }) });
 const EXTENDED_STORAGE = Object.freeze({ game: "incremancer-extended:game", skeleton: "incremancer-extended:skeleton", talents: "incremancer-extended:talents" });
-const FORK_VERSION = "v1.1.0";
-const FORK_VERSION_DATE = "2026-02-16";
-console.log("[Incremancer fork] " + FORK_VERSION + " (" + FORK_VERSION_DATE + ")");
+const FORK_VERSION = "v0.1.0";
+const FORK_VERSION_DATE = "2026-11-26";
+console.log("[Incremancer Extended] " + FORK_VERSION + " (" + FORK_VERSION_DATE + ")");
 var Incremancer;
 (() => {
   "use strict";
