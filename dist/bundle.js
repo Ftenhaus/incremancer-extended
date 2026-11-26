@@ -24,7 +24,11 @@ function extendedBulkQuote(base, growth, rank, ascension, budget, limit) {
   }
   return {count, total};
 }
-const FORK_VERSION = "v0.5.0-dev";
+const NECROPOLIS_BUILDINGS = Object.freeze([
+  {id: "ossuary", name: "Ossuary", cost: 50, effect: "+2 base zombie health"},
+  {id: "spiritWell", name: "Spirit Well", cost: 100, effect: "+1 base energy per second"}
+]);
+const FORK_VERSION = "v0.6.0-dev";
 const FORK_VERSION_DATE = "2026-11-26";
 console.log("[Incremancer Extended] " + FORK_VERSION + " (" + FORK_VERSION_DATE + ")");
 var Incremancer;
@@ -1264,14 +1268,26 @@ var Incremancer;
     static getInstance() {
       return GameModel.instance || (GameModel.instance = new GameModel, GameModel.instance.particles = new Qe, GameModel.instance.trophies = new TrophyDef, GameModel.instance.bones = new Bones, GameModel.instance.creatureFactory = new ae, GameModel.instance.creatures = new Ue, GameModel.instance.boneCollectors = new BoneCollectors, GameModel.instance.spiderCollectors = new SpiderCollector, GameModel.instance.graveyard = new Graveyard, GameModel.instance.spells = new SpellSystem, GameModel.instance.partFactory = new se, GameModel.instance.skeleton = new SkeletonChampion, GameModel.instance.upgrades = new UpgradeManager, GameModel.instance.zombies = new Zombies, GameModel.instance.humans = new Humans, GameModel.instance.police = new PoliceManager, GameModel.instance.army = new Te), GameModel.instance
     }
+    get necropolisBuildings() {
+      return NECROPOLIS_BUILDINGS;
+    }
+    buildNecropolis(id) {
+      const building = NECROPOLIS_BUILDINGS.find(entry => entry.id === id);
+      const data = this.persistentData;
+      if (!building || data.necropolis?.[id] || !(data.prestigePointsToSpend >= building.cost)) return;
+      data.necropolis = {...data.necropolis, [id]: true};
+      data.prestigePointsToSpend -= building.cost;
+      this.upgrades.applyUpgrades();
+      this.saveData();
+    }
     resetToBaseStats() {
-      this.energyRate = this.baseStats.energyRate,
+      this.energyRate = this.baseStats.energyRate + (this.persistentData.necropolis?.spiritWell ? 1 : 0),
         this.brainsRate = this.baseStats.brainsRate,
         this.bonesRate = this.baseStats.bonesRate,
         this.energyMax = this.baseStats.energyMax,
         this.bloodMax = this.baseStats.bloodMax,
         this.brainsMax = this.baseStats.brainsMax,
-        this.zombieHealth = this.baseStats.zombieHealth,
+        this.zombieHealth = this.baseStats.zombieHealth + (this.persistentData.necropolis?.ossuary ? 2 : 0),
         this.zombieDamage = this.baseStats.zombieDamage,
         this.zombieSpeed = this.baseStats.zombieSpeed,
         this.zombieCost = this.baseStats.zombieCost,

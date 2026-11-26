@@ -33,3 +33,7 @@ Use the existing compounding curve through rank 100. Each subsequent rank adds t
 Run `node tools/simulate-economy.mjs`. Each scenario begins at rank zero with one unit of blood per game second, empty storage with unlimited capacity, and a fixed prestige budget spent on Blood Rate. Reported income includes game speed. Combat, storage limits, and other upgrades are excluded. This compares purchasing power and does not predict elapsed playthrough time.
 
 Prior to this adjustment, rounding discounted prices allowed a zero-point budget to buy 3 ranks at ascension 5 and 20 at ascension 10. For positive base prices, charge at least one unit after rounding. Keep deliberately free upgrades free. Keep the early-game growth factor and the speed bonus while removing production gains obtained with an empty wallet.
+
+## Necropolis foundations
+
+The Ossuary costs 50 unspent prestige points and adds 2 base zombie health. The Spirit Well costs 100 and adds 1 base energy per second. Each building can be bought once. Flat bonuses are applied before ordinary upgrades, including after prestige and ascension. Both bonuses default to zero in older saves.

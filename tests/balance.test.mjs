@@ -99,3 +99,13 @@ test('equipment XP grants multiple exact-threshold levels while the champion is 
   assert.equal(champion.persistent.level, 3);
   assert.equal(champion.persistent.xp, 0);
 });
+
+test('necropolis purchases validate the building, budget and ownership on legacy saves', () => {
+  const build = extract('buildNecropolis(id) {', 'id');
+  let saves = 0;
+  const context = {persistentData: {prestigePointsToSpend: 50}, upgrades: {applyUpgrades() {}}, saveData() { saves++; }};
+  for (const id of ['unknown', 'spiritWell', 'ossuary', 'ossuary']) build.call(context, id);
+  assert.equal(context.persistentData.prestigePointsToSpend, 0);
+  assert.equal(context.persistentData.necropolis.ossuary, true);
+  assert.equal(saves, 1);
+});
